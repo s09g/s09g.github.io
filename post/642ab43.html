@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+<script data-ad-client="ca-pub-4376471142277990" async
+  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"s09g.xyz","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="组播是指从某一地址把信息同时传递给一组目的地址。         单播 点对点发消息   组播 某一点对一组目的发送消息   广播 从某一点对所有地址发送消息   地址在IP层语境下，一般是指IP地址。在分布式系统里，一般指进程.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Multicast 组播">
+<meta property="og:url" content="http://s09g.xyz/post/642ab43.html">
+<meta property="og:site_name" content="s09g">
+<meta property="og:description" content="组播是指从某一地址把信息同时传递给一组目的地址。         单播 点对点发消息   组播 某一点对一组目的发送消息   广播 从某一点对所有地址发送消息   地址在IP层语境下，一般是指IP地址。在分布式系统里，一般指进程.">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://github.com/s09g/notes/raw/master/cloud/11.%E7%BB%84%E6%92%AD/assets/1.png">
+<meta property="og:image" content="https://github.com/s09g/notes/raw/master/cloud/11.%E7%BB%84%E6%92%AD/assets/2.png">
+<meta property="article:published_time" content="2019-09-08T02:59:33.000Z">
+<meta property="article:modified_time" content="2020-05-05T03:31:37.625Z">
+<meta property="article:author" content="s09g">
+<meta property="article:tag" content="云计算">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://github.com/s09g/notes/raw/master/cloud/11.%E7%BB%84%E6%92%AD/assets/1.png">
+
+<link rel="canonical" href="http://s09g.xyz/post/642ab43.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Multicast 组播 | s09g</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-166221552-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-166221552-1');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">s09g</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">10</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">1</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">47</span></a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://s09g.xyz/post/642ab43.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="s09g">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="s09g">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Multicast 组播
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-09-07 19:59:33" itemprop="dateCreated datePublished" datetime="2019-09-07T19:59:33-07:00">2019-09-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-05-04 20:31:37" itemprop="dateModified" datetime="2020-05-04T20:31:37-07:00">2020-05-04</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>组播是指从某一地址把信息同时传递给一组目的地址。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>单播</td>
+<td>点对点发消息</td>
+</tr>
+<tr>
+<td>组播</td>
+<td>某一点对一组目的发送消息</td>
+</tr>
+<tr>
+<td>广播</td>
+<td>从某一点对所有地址发送消息</td>
+</tr>
+</tbody></table>
+<p><code>地址</code>在IP层语境下，一般是指<code>IP地址</code>。在分布式系统里，一般指<code>进程</code>. </p>
+<a id="more"></a>
+
+
+<p><em>相对于<code>广播</code>，<code>组播(也叫多播)</code>的传输更受限制。<code>组播</code>只在一组地址(<code>进程</code>)中传播</em></p>
+<h2 id="组播的需求"><a href="#组播的需求" class="headerlink" title="组播的需求"></a>组播的需求</h2><p>云计算环境下，组播协议需要满足两个条件：<code>容错(fault-tolerance)</code>和<code>可拓展性(scalability)</code></p>
+<ul>
+<li>容错(fault-tolerance): 节点故障、数据包丢失、底层网络延迟…</li>
+<li>可拓展性(scalability): 节点数量可能快速增长，而协议开销不能增长过快(慢于<code>O(n)</code>)</li>
+</ul>
+<h2 id="集中式解决方案"><a href="#集中式解决方案" class="headerlink" title="集中式解决方案"></a>集中式解决方案</h2><p><img src="https://github.com/s09g/notes/raw/master/cloud/11.%E7%BB%84%E6%92%AD/assets/1.png" alt=""></p>
+<p><code>centralized</code>是最简单的解决方案。<code>sender</code>通过<code>for/while loop</code>向所有<code>receiver</code>发送信息。</p>
+<p>但是会导致两个问题：</p>
+<ol>
+<li>无法容错。如果在循环中出现异常，<code>loop</code>会被中断，之后的<code>receiver</code>将不会收到消息</li>
+<li>开销高。<code>receiver</code>接收消息的平均时间为<code>O(n)</code>，网络延迟高</li>
+</ol>
+<h2 id="基于树的解决方案"><a href="#基于树的解决方案" class="headerlink" title="基于树的解决方案"></a>基于树的解决方案</h2><p>为了解决上述两个问题，于是有了<code>tree-based</code>方案<br>(e.g. IP组播, SRM, RMTP, TRAM, TMTP)</p>
+<p><img src="https://github.com/s09g/notes/raw/master/cloud/11.%E7%BB%84%E6%92%AD/assets/2.png" alt=""></p>
+<p>如果树足够平衡，那么树的高度应该是<code>O(log n)</code>, 并且子节点为常数。<br>对于云来说，故障是常态，所以树需要额外的固定开销来持续维护/修复树。</p>
+<p>通常会在多播组之间生成树，并使用<strong>生成树算法</strong>来传播组播消息。随后再用<code>ACK(acknowledgments)</code>或<code>NAK(negative acknowledgments)</code>来修复失败的组播</p>
+<h2 id="SRM-Scalable-Reliable-Multicast"><a href="#SRM-Scalable-Reliable-Multicast" class="headerlink" title="SRM(Scalable Reliable Multicast)"></a>SRM(Scalable Reliable Multicast)</h2><ul>
+<li>使用<code>NAK</code>：<ul>
+<li>如果一个节点一段时间没有收到组播消息，那么它会向<code>root</code>方向(父节点)发送修复请求。当另一个节点收到修复请求，它会重发所需的组播消息</li>
+</ul>
+</li>
+<li><code>NAK/ACK</code>风暴: 当网络不稳定时，整个网络中可能瞬间充满大量的<code>NAK/ACK</code>信息。为了避免<code>NAK</code>风暴<ul>
+<li>随机延迟一段时间发送请求</li>
+<li>使用<code>exponential backoff</code>：每次请求的间隔为上一次时长的两倍</li>
+</ul>
+</li>
+</ul>
+<h2 id="RMTP-Relicable-Multicast-Transport-Protocol"><a href="#RMTP-Relicable-Multicast-Transport-Protocol" class="headerlink" title="RMTP(Relicable Multicast Transport Protocol)"></a>RMTP(Relicable Multicast Transport Protocol)</h2><ul>
+<li>使用<code>ACK</code></li>
+<li><code>recevier</code>定期向<code>sender</code>发送一个<strong>信息摘要</strong><code>(digest)</code>。如果<code>sender</code>发现<code>recevier</code>缺少信息，就会重新发送一份数据</li>
+<li>为了避免<code>ACK</code>风暴，只有一部分节点会被指定<code>(designated receiver)</code>。这部分节点会负责转发缺失的组播消息</li>
+</ul>
+<p><em>然而，这些协议依然会造成<code>O(n)</code>的<code>ACK/NAK</code>开销</em></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E4%BA%91%E8%AE%A1%E7%AE%97/" rel="tag"># 云计算</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/post/e24177ad.html" rel="prev" title="MapReduce Fault-Tolerance">
+      <i class="fa fa-chevron-left"></i> MapReduce Fault-Tolerance
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/post/33fa1e4.html" rel="next" title="Gossip Protocol">
+      Gossip Protocol <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#组播的需求"><span class="nav-number">1.</span> <span class="nav-text">组播的需求</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#集中式解决方案"><span class="nav-number">2.</span> <span class="nav-text">集中式解决方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基于树的解决方案"><span class="nav-number">3.</span> <span class="nav-text">基于树的解决方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SRM-Scalable-Reliable-Multicast"><span class="nav-number">4.</span> <span class="nav-text">SRM(Scalable Reliable Multicast)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RMTP-Relicable-Multicast-Transport-Protocol"><span class="nav-number">5.</span> <span class="nav-text">RMTP(Relicable Multicast Transport Protocol)</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">s09g</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">s09g</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

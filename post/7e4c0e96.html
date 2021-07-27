@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+<script data-ad-client="ca-pub-4376471142277990" async
+  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"s09g.xyz","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="1. constructor-arg 子元素">
+<meta property="og:type" content="article">
+<meta property="og:title" content="解析Bean05-constructor-arg,property,qualifier">
+<meta property="og:url" content="http://s09g.xyz/post/7e4c0e96.html">
+<meta property="og:site_name" content="s09g">
+<meta property="og:description" content="1. constructor-arg 子元素">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-12-04T03:59:33.000Z">
+<meta property="article:modified_time" content="2020-05-05T03:30:20.226Z">
+<meta property="article:author" content="s09g">
+<meta property="article:tag" content="Spring">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://s09g.xyz/post/7e4c0e96.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>解析Bean05-constructor-arg,property,qualifier | s09g</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-166221552-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-166221552-1');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">s09g</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">10</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">1</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">47</span></a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://s09g.xyz/post/7e4c0e96.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="s09g">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="s09g">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          解析Bean05-constructor-arg,property,qualifier
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-03 19:59:33" itemprop="dateCreated datePublished" datetime="2019-12-03T19:59:33-08:00">2019-12-03</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-05-04 20:30:20" itemprop="dateModified" datetime="2020-05-04T20:30:20-07:00">2020-05-04</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="1-constructor-arg-子元素"><a href="#1-constructor-arg-子元素" class="headerlink" title="1. constructor-arg 子元素"></a>1. constructor-arg 子元素</h2><a id="more"></a>
+
+
+<h3 id="1-1-示例"><a href="#1-1-示例" class="headerlink" title="1.1 示例"></a>1.1 示例</h3><p>举个小栗子，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">StudentService</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line">    <span class="keyword">private</span> Integer age;</span><br><span class="line">    <span class="keyword">private</span> BookService bookService;</span><br><span class="line">    StudentService(String name, Integer age, BookService bookService)&#123;</span><br><span class="line">        <span class="keyword">this</span>.name = name;</span><br><span class="line">        <span class="keyword">this</span>.age = age;</span><br><span class="line">        <span class="keyword">this</span>.bookService = bookService;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"bookService"</span> <span class="attr">class</span>=<span class="string">"org.springframework.core.service.BookService"</span>/&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"studentService"</span> <span class="attr">class</span>=<span class="string">"org.springframework.core.service.StudentService"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">constructor-arg</span> <span class="attr">index</span>=<span class="string">"0"</span> <span class="attr">value</span>=<span class="string">"chenssy"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">constructor-arg</span> <span class="attr">name</span>=<span class="string">"age"</span> <span class="attr">value</span>=<span class="string">"100"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">constructor-arg</span> <span class="attr">name</span>=<span class="string">"bookService"</span> <span class="attr">ref</span>=<span class="string">"bookService"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>StudentService 定义一个构造函数，配置文件中使用 <code>constructor-arg</code> 元素对其配置，该元素可以实现对 StudentService 自动寻找对应的构造函数，并在初始化的时候将值当做参数进行设置。</p>
+<h3 id="1-2-parseConstructorArgElements"><a href="#1-2-parseConstructorArgElements" class="headerlink" title="1.2 parseConstructorArgElements"></a>1.2 parseConstructorArgElements</h3><p><code>#parseConstructorArgElements(Element beanEle, BeanDefinition bd)</code> 方法，完成 <code>constructor-arg</code> 子元素的解析。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// BeanDefinitionParserDelegate.java</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">parseConstructorArgElements</span><span class="params">(Element beanEle, BeanDefinition bd)</span> </span>&#123;</span><br><span class="line">	NodeList nl = beanEle.getChildNodes();</span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nl.getLength(); i++) &#123;</span><br><span class="line">		Node node = nl.item(i);</span><br><span class="line">		<span class="keyword">if</span> (isCandidateElement(node) &amp;&amp; nodeNameEquals(node, CONSTRUCTOR_ARG_ELEMENT)) &#123; <span class="comment">// 标签名为 constructor-arg</span></span><br><span class="line">			parseConstructorArgElement((Element) node, bd);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>遍历所有子元素，如果为 <code>constructor-arg</code> 标签，则调用 <code>#parseConstructorArgElement(Element ele, BeanDefinition bd)</code> 方法，进行解析。</p>
+<h3 id="1-3-parseConstructorArgElement"><a href="#1-3-parseConstructorArgElement" class="headerlink" title="1.3 parseConstructorArgElement"></a>1.3 parseConstructorArgElement</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// BeanDefinitionParserDelegate.java</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">parseConstructorArgElement</span><span class="params">(Element ele, BeanDefinition bd)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 提取 index、type、name 属性值</span></span><br><span class="line">    String indexAttr = ele.getAttribute(INDEX_ATTRIBUTE);</span><br><span class="line">    String typeAttr = ele.getAttribute(TYPE_ATTRIBUTE);</span><br><span class="line">    String nameAttr = ele.getAttribute(NAME_ATTRIBUTE);</span><br><span class="line">    <span class="keyword">if</span> (StringUtils.hasLength(indexAttr)) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 如果有 index</span></span><br><span class="line">            <span class="keyword">int</span> index = Integer.parseInt(indexAttr);</span><br><span class="line">            <span class="keyword">if</span> (index &lt; <span class="number">0</span>) &#123;</span><br><span class="line">                error(<span class="string">"'index' cannot be lower than 0"</span>, ele);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="comment">// &lt;1&gt;</span></span><br><span class="line">                    <span class="keyword">this</span>.parseState.push(<span class="keyword">new</span> ConstructorArgumentEntry(index));</span><br><span class="line">                    <span class="comment">// &lt;2&gt; 解析 ele 对应属性元素</span></span><br><span class="line">                    Object value = parsePropertyValue(ele, bd, <span class="keyword">null</span>);</span><br><span class="line">                    <span class="comment">// &lt;3&gt; 根据解析的属性元素构造一个 ValueHolder 对象</span></span><br><span class="line">                    ConstructorArgumentValues.ValueHolder valueHolder = <span class="keyword">new</span> ConstructorArgumentValues.ValueHolder(value);</span><br><span class="line">                    <span class="keyword">if</span> (StringUtils.hasLength(typeAttr)) &#123;</span><br><span class="line">                        valueHolder.setType(typeAttr);</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (StringUtils.hasLength(nameAttr)) &#123;</span><br><span class="line">                        valueHolder.setName(nameAttr);</span><br><span class="line">                    &#125;</span><br><span class="line">                    valueHolder.setSource(extractSource(ele));</span><br><span class="line">                    <span class="comment">// 不允许重复指定相同参数</span></span><br><span class="line">                    <span class="keyword">if</span> (bd.getConstructorArgumentValues().hasIndexedArgumentValue(index)) &#123;</span><br><span class="line">                        error(<span class="string">"Ambiguous constructor-arg entries for index "</span> + index, ele);</span><br><span class="line">                    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        <span class="comment">// &lt;4&gt; 加入到 indexedArgumentValues 中</span></span><br><span class="line">                        bd.getConstructorArgumentValues().addIndexedArgumentValue(index, valueHolder);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">                    <span class="keyword">this</span>.parseState.pop();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (NumberFormatException ex) &#123;</span><br><span class="line">            error(<span class="string">"Attribute 'index' of tag 'constructor-arg' must be an integer"</span>, ele);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">this</span>.parseState.push(<span class="keyword">new</span> ConstructorArgumentEntry());</span><br><span class="line">            <span class="comment">// 解析 ele 对应属性元素</span></span><br><span class="line">            Object value = parsePropertyValue(ele, bd, <span class="keyword">null</span>);</span><br><span class="line">            <span class="comment">// 根据解析的属性元素构造一个 ValueHolder 对象</span></span><br><span class="line">            ConstructorArgumentValues.ValueHolder valueHolder = <span class="keyword">new</span> ConstructorArgumentValues.ValueHolder(value);</span><br><span class="line">            <span class="keyword">if</span> (StringUtils.hasLength(typeAttr)) &#123;</span><br><span class="line">                valueHolder.setType(typeAttr);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (StringUtils.hasLength(nameAttr)) &#123;</span><br><span class="line">                valueHolder.setName(nameAttr);</span><br><span class="line">            &#125;</span><br><span class="line">            valueHolder.setSource(extractSource(ele));</span><br><span class="line">            <span class="comment">// 加入到 indexedArgumentValues 中</span></span><br><span class="line">            bd.getConstructorArgumentValues().addGenericArgumentValue(valueHolder);</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            <span class="keyword">this</span>.parseState.pop();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>首先获取 <code>index</code>、<code>type</code>、<code>name</code> 三个属性值，然后根据是否存在 <code>index</code> 来区分，执行后续逻辑。其实两者逻辑都差不多，总共分为如下几个步骤（以有 <code>index</code> 为例）：</p>
+<ol>
+<li>在 <code>&lt;1&gt;</code> 处，构造 ConstructorArgumentEntry 对象并将其加入到 ParseState 队列中。ConstructorArgumentEntry 表示构造函数的参数。</li>
+<li>在 <code>&lt;2&gt;</code> 处，调用 <code>#parsePropertyValue(Element ele, BeanDefinition bd, String propertyName)</code> 方法，解析 constructor-arg 子元素，返回结果值。详细解析，见 <a href="#14-parsePropertyValue">1.4 parsePropertyValue</a> 。</li>
+<li>在 <code>&lt;3&gt;</code> 处，根据解析的结果值，构造ConstructorArgumentValues.ValueHolder 实例对象，并将 <code>type</code>、<code>name</code> 设置到 ValueHolder 中</li>
+<li>在 <code>&lt;4&gt;</code> 处，最后，将 ValueHolder 实例对象添加到 <code>indexedArgumentValues</code> 集合中。</li>
+</ol>
+<p>无 index 的处理逻辑差不多，只有几点不同：</p>
+<ul>
+<li>构造 ConstructorArgumentEntry 对象时是调用<strong>无参</strong>构造函数</li>
+<li>最后是将 ValueHolder 实例添加到 <code>genericArgumentValues</code> 集合中。</li>
+</ul>
+<h3 id="1-4-parsePropertyValue"><a href="#1-4-parsePropertyValue" class="headerlink" title="1.4 parsePropertyValue"></a>1.4 parsePropertyValue</h3><p>调用 <code>#parsePropertyValue(Element ele, BeanDefinition bd, String propertyName)</code> 方法，解析 constructor-arg 子元素，返回结果值。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Get the value of a property element. May be a list etc.</span></span><br><span class="line"><span class="comment"> * Also used for constructor arguments, "propertyName" being null in this case.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">parsePropertyValue</span><span class="params">(Element ele, BeanDefinition bd, @Nullable String propertyName)</span> </span>&#123;</span><br><span class="line">    String elementName = (propertyName != <span class="keyword">null</span> ?</span><br><span class="line">            <span class="string">"&lt;property&gt; element for property '"</span> + propertyName + <span class="string">"'"</span> :</span><br><span class="line">            <span class="string">"&lt;constructor-arg&gt; element"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// &lt;1&gt; 查找子节点中，是否有 ref、value、list 等元素</span></span><br><span class="line">    <span class="comment">// Should only have one child element: ref, value, list, etc.</span></span><br><span class="line">    NodeList nl = ele.getChildNodes();</span><br><span class="line">    Element subElement = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nl.getLength(); i++) &#123;</span><br><span class="line">        Node node = nl.item(i);</span><br><span class="line">        <span class="comment">// meta 、description 不处理</span></span><br><span class="line">        <span class="keyword">if</span> (node <span class="keyword">instanceof</span> Element &amp;&amp; !nodeNameEquals(node, DESCRIPTION_ELEMENT) &amp;&amp;</span><br><span class="line">                !nodeNameEquals(node, META_ELEMENT)) &#123;</span><br><span class="line">            <span class="comment">// Child element is what we're looking for.</span></span><br><span class="line">            <span class="keyword">if</span> (subElement != <span class="keyword">null</span>) &#123;</span><br><span class="line">                error(elementName + <span class="string">" must not contain more than one sub-element"</span>, ele);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                subElement = (Element) node;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// &lt;1&gt; 是否有 ref 属性</span></span><br><span class="line">    <span class="keyword">boolean</span> hasRefAttribute = ele.hasAttribute(REF_ATTRIBUTE);</span><br><span class="line">    <span class="comment">// &lt;1&gt; 是否有 value 属性</span></span><br><span class="line">    <span class="keyword">boolean</span> hasValueAttribute = ele.hasAttribute(VALUE_ATTRIBUTE);</span><br><span class="line">    <span class="comment">// &lt;1&gt; 多个元素存在，报错，存在冲突。</span></span><br><span class="line">    <span class="keyword">if</span> ((hasRefAttribute &amp;&amp; hasValueAttribute) || <span class="comment">// 1. ref 和 value 都存在</span></span><br><span class="line">            ((hasRefAttribute || hasValueAttribute) &amp;&amp; subElement != <span class="keyword">null</span>)) &#123; <span class="comment">// 2. ref he value 存在一，并且 subElement 存在</span></span><br><span class="line">        error(elementName +</span><br><span class="line">                <span class="string">" is only allowed to contain either 'ref' attribute OR 'value' attribute OR sub-element"</span>, ele);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// &lt;2&gt; 将 ref 属性值，构造为 RuntimeBeanReference 实例对象</span></span><br><span class="line">    <span class="keyword">if</span> (hasRefAttribute) &#123;</span><br><span class="line">        String refName = ele.getAttribute(REF_ATTRIBUTE);</span><br><span class="line">        <span class="keyword">if</span> (!StringUtils.hasText(refName)) &#123;</span><br><span class="line">            error(elementName + <span class="string">" contains empty 'ref' attribute"</span>, ele);</span><br><span class="line">        &#125;</span><br><span class="line">        RuntimeBeanReference ref = <span class="keyword">new</span> RuntimeBeanReference(refName);</span><br><span class="line">        ref.setSource(extractSource(ele));</span><br><span class="line">        <span class="keyword">return</span> ref;</span><br><span class="line">    <span class="comment">// &lt;3&gt; 将 value 属性值，构造为 TypedStringValue 实例对象</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (hasValueAttribute) &#123;</span><br><span class="line">        TypedStringValue valueHolder = <span class="keyword">new</span> TypedStringValue(ele.getAttribute(VALUE_ATTRIBUTE));</span><br><span class="line">        valueHolder.setSource(extractSource(ele));</span><br><span class="line">        <span class="keyword">return</span> valueHolder;</span><br><span class="line">    <span class="comment">// &lt;4&gt; 解析子元素</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (subElement != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> parsePropertySubElement(subElement, bd);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// Neither child element nor "ref" or "value" attribute found.</span></span><br><span class="line">        error(elementName + <span class="string">" must specify a ref or value"</span>, ele);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>在 <code>&lt;1&gt;</code> 处，提取 <code>constructor-arg</code> 的子元素、<code>ref</code> 属性值和 <code>value</code> 属性值，对其进行判断。以下两种情况是不允许存在的：<ol>
+<li><code>ref</code> 和 <code>value</code> 属性同时存在 。</li>
+<li>存在 <code>ref</code> 或者 <code>value</code> 且又有子元素。</li>
+</ol>
+</li>
+<li>在 <code>&lt;2&gt;</code> 处，若存在 <code>ref</code> 属性，则获取其值并将其封装进 <code>org.springframework.beans.factory.config.RuntimeBeanReference</code> 实例对象中。</li>
+<li>在 <code>&lt;3&gt;</code> 处，若存在 <code>value</code> 属性，则获取其值并将其封装进 <code>org.springframework.beans.factory.config.TypedStringValue</code> 实例对象中。</li>
+<li>在 <code>&lt;4&gt;</code> 处，如果子元素不为空，则调用 <code>#parsePropertySubElement(Element ele, BeanDefinition bd)</code> 方法，对子元素进一步解析。详细解析，见 <a href="#15-parsePropertySubElement">1.5 parsePropertySubElement</a> 中。</li>
+</ol>
+<h3 id="1-5-parsePropertySubElement"><a href="#1-5-parsePropertySubElement" class="headerlink" title="1.5 parsePropertySubElement"></a>1.5 parsePropertySubElement</h3><p>对于 <code>constructor-arg</code> 子元素的嵌套子元素，需要调用 <code>#parsePropertySubElement(Element ele, BeanDefinition bd)</code> 方法，进一步处理。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Parse a value, ref or collection sub-element of a property or</span></span><br><span class="line"><span class="comment"> * constructor-arg element.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> ele subelement of property element; we don't know which yet</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> defaultValueType the default type (class name) for any</span></span><br><span class="line"><span class="comment"> * &#123;<span class="doctag">@code</span> &lt;value&gt;&#125; tag that might be created</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">parsePropertySubElement</span><span class="params">(Element ele, @Nullable BeanDefinition bd, @Nullable String defaultValueType)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (!isDefaultNamespace(ele)) &#123;</span><br><span class="line">		<span class="keyword">return</span> parseNestedCustomElement(ele, bd);</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (nodeNameEquals(ele, BEAN_ELEMENT)) &#123; <span class="comment">// bean 标签</span></span><br><span class="line">		BeanDefinitionHolder nestedBd = parseBeanDefinitionElement(ele, bd);</span><br><span class="line">		<span class="keyword">if</span> (nestedBd != <span class="keyword">null</span>) &#123;</span><br><span class="line">			nestedBd = decorateBeanDefinitionIfRequired(ele, nestedBd, bd);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> nestedBd;</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (nodeNameEquals(ele, REF_ELEMENT)) &#123; <span class="comment">// ref 标签</span></span><br><span class="line">		<span class="comment">// A generic reference to any name of any bean.</span></span><br><span class="line">		String refName = ele.getAttribute(BEAN_REF_ATTRIBUTE);</span><br><span class="line">		<span class="keyword">boolean</span> toParent = <span class="keyword">false</span>;</span><br><span class="line">		<span class="keyword">if</span> (!StringUtils.hasLength(refName)) &#123;</span><br><span class="line">			<span class="comment">// A reference to the id of another bean in a parent context.</span></span><br><span class="line">			refName = ele.getAttribute(PARENT_REF_ATTRIBUTE);</span><br><span class="line">			toParent = <span class="keyword">true</span>;</span><br><span class="line">			<span class="keyword">if</span> (!StringUtils.hasLength(refName)) &#123;</span><br><span class="line">				error(<span class="string">"'bean' or 'parent' is required for &lt;ref&gt; element"</span>, ele);</span><br><span class="line">				<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (!StringUtils.hasText(refName)) &#123;</span><br><span class="line">			error(<span class="string">"&lt;ref&gt; element contains empty target attribute"</span>, ele);</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		RuntimeBeanReference ref = <span class="keyword">new</span> RuntimeBeanReference(refName, toParent);</span><br><span class="line">		ref.setSource(extractSource(ele));</span><br><span class="line">		<span class="keyword">return</span> ref;</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (nodeNameEquals(ele, IDREF_ELEMENT)) &#123; <span class="comment">// idref 标签</span></span><br><span class="line">		<span class="keyword">return</span> parseIdRefElement(ele);</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (nodeNameEquals(ele, VALUE_ELEMENT)) &#123; <span class="comment">// value 标签</span></span><br><span class="line">		<span class="keyword">return</span> parseValueElement(ele, defaultValueType);</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (nodeNameEquals(ele, NULL_ELEMENT)) &#123; <span class="comment">// null 标签</span></span><br><span class="line">		<span class="comment">// It's a distinguished null value. Let's wrap it in a TypedStringValue</span></span><br><span class="line">		<span class="comment">// object in order to preserve the source location.</span></span><br><span class="line">		TypedStringValue nullHolder = <span class="keyword">new</span> TypedStringValue(<span class="keyword">null</span>);</span><br><span class="line">		nullHolder.setSource(extractSource(ele));</span><br><span class="line">		<span class="keyword">return</span> nullHolder;</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (nodeNameEquals(ele, ARRAY_ELEMENT)) &#123; <span class="comment">// array 标签</span></span><br><span class="line">		<span class="keyword">return</span> parseArrayElement(ele, bd);</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (nodeNameEquals(ele, LIST_ELEMENT)) &#123; <span class="comment">// list 标签</span></span><br><span class="line">		<span class="keyword">return</span> parseListElement(ele, bd);</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (nodeNameEquals(ele, SET_ELEMENT)) &#123; <span class="comment">// set 标签</span></span><br><span class="line">		<span class="keyword">return</span> parseSetElement(ele, bd);</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (nodeNameEquals(ele, MAP_ELEMENT)) &#123; <span class="comment">// map 标签</span></span><br><span class="line">		<span class="keyword">return</span> parseMapElement(ele, bd);</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (nodeNameEquals(ele, PROPS_ELEMENT)) &#123; <span class="comment">// props 标签</span></span><br><span class="line">		<span class="keyword">return</span> parsePropsElement(ele);</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123; <span class="comment">// 未知标签</span></span><br><span class="line">		error(<span class="string">"Unknown property sub-element: ["</span> + ele.getNodeName() + <span class="string">"]"</span>, ele);</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面对各个子类进行分类处理</p>
+<h2 id="2-property-子元素"><a href="#2-property-子元素" class="headerlink" title="2. property 子元素"></a>2. property 子元素</h2><h3 id="2-1-示例"><a href="#2-1-示例" class="headerlink" title="2.1 示例"></a>2.1 示例</h3><p>我们一般使用如下方式，来使用 <code>property</code> 子元素。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"studentService"</span> <span class="attr">class</span>=<span class="string">"org.springframework.core.service.StudentService"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"name"</span> <span class="attr">value</span>=<span class="string">"chenssy"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"age"</span> <span class="attr">value</span>=<span class="string">"18"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-2-parsePropertyElements"><a href="#2-2-parsePropertyElements" class="headerlink" title="2.2 parsePropertyElements"></a>2.2 parsePropertyElements</h3><p>对于 property 子元素的解析，Spring 调用 <code>parsePropertyElements(Element beanEle, BeanDefinition bd)</code> 方法。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Parse property sub-elements of the given bean element.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">parsePropertyElements</span><span class="params">(Element beanEle, BeanDefinition bd)</span> </span>&#123;</span><br><span class="line">	NodeList nl = beanEle.getChildNodes();</span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nl.getLength(); i++) &#123;</span><br><span class="line">		Node node = nl.item(i);</span><br><span class="line">		<span class="keyword">if</span> (isCandidateElement(node) &amp;&amp; nodeNameEquals(node, PROPERTY_ELEMENT)) &#123; <span class="comment">// property 标签</span></span><br><span class="line">			parsePropertyElement((Element) node, bd);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>和 <code>constructor-arg</code> 子元素差不多，同样是“提取”( 遍历 )所有的 <code>property</code> 的子元素，然后调用 <code>#parsePropertyElement((Element ele, BeanDefinition b)</code> 进行解析。</p>
+<h3 id="2-3-parsePropertyElement"><a href="#2-3-parsePropertyElement" class="headerlink" title="2.3 parsePropertyElement"></a>2.3 parsePropertyElement</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Parse a property element.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">parsePropertyElement</span><span class="params">(Element ele, BeanDefinition bd)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 获取 name 属性</span></span><br><span class="line">    String propertyName = ele.getAttribute(NAME_ATTRIBUTE);</span><br><span class="line">    <span class="keyword">if</span> (!StringUtils.hasLength(propertyName)) &#123;</span><br><span class="line">        error(<span class="string">"Tag 'property' must have a 'name' attribute"</span>, ele);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">this</span>.parseState.push(<span class="keyword">new</span> PropertyEntry(propertyName));</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 如果存在相同的 name ，报错</span></span><br><span class="line">        <span class="keyword">if</span> (bd.getPropertyValues().contains(propertyName)) &#123;</span><br><span class="line">            error(<span class="string">"Multiple 'property' definitions for property '"</span> + propertyName + <span class="string">"'"</span>, ele);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 解析属性值</span></span><br><span class="line">        Object val = parsePropertyValue(ele, bd, propertyName);</span><br><span class="line">        <span class="comment">// 创建 PropertyValue 对象</span></span><br><span class="line">        PropertyValue pv = <span class="keyword">new</span> PropertyValue(propertyName, val);</span><br><span class="line">        parseMetaElements(ele, pv);</span><br><span class="line">        pv.setSource(extractSource(ele));</span><br><span class="line">        <span class="comment">// 添加到 PropertyValue 集合中</span></span><br><span class="line">        bd.getPropertyValues().addPropertyValue(pv);</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">this</span>.parseState.pop();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>与解析 <code>constructor-arg</code> 子元素步骤差不多：</p>
+<ul>
+<li>调用 <code>#parsePropertyElement(Element ele, BeanDefinition b)</code> 方法， 解析子元素属性值。</li>
+<li>然后，根据该值构造 PropertyValue 实例对象。</li>
+<li>最后，将 PropertyValue 添加到 BeanDefinition 中的 MutablePropertyValues 中。</li>
+</ul>
+<h2 id="3-qualifier-子元素"><a href="#3-qualifier-子元素" class="headerlink" title="3. qualifier 子元素"></a>3. qualifier 子元素</h2><h3 id="3-1-示例"><a href="#3-1-示例" class="headerlink" title="3.1 示例"></a>3.1 示例</h3><p>见 <a href="http://www.voidcn.com/article/p-vdgrbkrm-bqu.html" target="_blank" rel="noopener">Spring 注解实现Bean依赖注入之 @Qualifier</a></p>
+<h3 id="3-2-parseQualifierElement"><a href="#3-2-parseQualifierElement" class="headerlink" title="3.2 parseQualifierElement"></a>3.2 parseQualifierElement</h3><p><code>#parseQualifierElement(Element ele, AbstractBeanDefinition bd)</code> 方法，完成 <code>qualifier</code> 子元素的解析。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Parse a qualifier element.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">parseQualifierElement</span><span class="params">(Element ele, AbstractBeanDefinition bd)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 解析 type 属性</span></span><br><span class="line">    String typeName = ele.getAttribute(TYPE_ATTRIBUTE);</span><br><span class="line">    <span class="keyword">if</span> (!StringUtils.hasLength(typeName)) &#123; <span class="comment">// 必须有 type</span></span><br><span class="line">        error(<span class="string">"Tag 'qualifier' must have a 'type' attribute"</span>, ele);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">this</span>.parseState.push(<span class="keyword">new</span> QualifierEntry(typeName));</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 创建 AutowireCandidateQualifier 对象</span></span><br><span class="line">        AutowireCandidateQualifier qualifier = <span class="keyword">new</span> AutowireCandidateQualifier(typeName);</span><br><span class="line">        qualifier.setSource(extractSource(ele));</span><br><span class="line">        <span class="comment">// 解析 value 属性，并设置到 AutowireCandidateQualifier 中</span></span><br><span class="line">        String value = ele.getAttribute(VALUE_ATTRIBUTE);</span><br><span class="line">        <span class="keyword">if</span> (StringUtils.hasLength(value)) &#123;</span><br><span class="line">            qualifier.setAttribute(AutowireCandidateQualifier.VALUE_KEY, value);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 遍历子节点</span></span><br><span class="line">        NodeList nl = ele.getChildNodes();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; nl.getLength(); i++) &#123;</span><br><span class="line">            Node node = nl.item(i);</span><br><span class="line">            <span class="keyword">if</span> (isCandidateElement(node) &amp;&amp; nodeNameEquals(node, QUALIFIER_ATTRIBUTE_ELEMENT)) &#123; <span class="comment">// attribute 标签</span></span><br><span class="line">                Element attributeEle = (Element) node;</span><br><span class="line">                String attributeName = attributeEle.getAttribute(KEY_ATTRIBUTE); <span class="comment">// attribute 标签的 key 属性</span></span><br><span class="line">                String attributeValue = attributeEle.getAttribute(VALUE_ATTRIBUTE); <span class="comment">// attribute 标签的 value 属性</span></span><br><span class="line">                <span class="keyword">if</span> (StringUtils.hasLength(attributeName) &amp;&amp; StringUtils.hasLength(attributeValue)) &#123;</span><br><span class="line">                    <span class="comment">// 创建 BeanMetadataAttribute 对象</span></span><br><span class="line">                    BeanMetadataAttribute attribute = <span class="keyword">new</span> BeanMetadataAttribute(attributeName, attributeValue);</span><br><span class="line">                    attribute.setSource(extractSource(attributeEle));</span><br><span class="line">                    <span class="comment">// 添加到 attributes 中</span></span><br><span class="line">                    qualifier.addMetadataAttribute(attribute);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                    error(<span class="string">"Qualifier 'attribute' tag must have a 'name' and 'value'"</span>, attributeEle);</span><br><span class="line">                    <span class="keyword">return</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 添加到 qualifiers 中</span></span><br><span class="line">        bd.addQualifier(qualifier);</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">this</span>.parseState.pop();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Spring/" rel="tag"># Spring</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/post/5fc3586b.html" rel="prev" title="解析Bean04-meta,lookup-method,replace-method">
+      <i class="fa fa-chevron-left"></i> 解析Bean04-meta,lookup-method,replace-method
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/post/96dcad69.html" rel="next" title="解析Bean06-解析自定义标签">
+      解析Bean06-解析自定义标签 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-constructor-arg-子元素"><span class="nav-number">1.</span> <span class="nav-text">1. constructor-arg 子元素</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-示例"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-parseConstructorArgElements"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 parseConstructorArgElements</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-parseConstructorArgElement"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 parseConstructorArgElement</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-4-parsePropertyValue"><span class="nav-number">1.4.</span> <span class="nav-text">1.4 parsePropertyValue</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-5-parsePropertySubElement"><span class="nav-number">1.5.</span> <span class="nav-text">1.5 parsePropertySubElement</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-property-子元素"><span class="nav-number">2.</span> <span class="nav-text">2. property 子元素</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-示例"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-parsePropertyElements"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 parsePropertyElements</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-parsePropertyElement"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 parsePropertyElement</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-qualifier-子元素"><span class="nav-number">3.</span> <span class="nav-text">3. qualifier 子元素</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-示例"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-parseQualifierElement"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 parseQualifierElement</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">s09g</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">s09g</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

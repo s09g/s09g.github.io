@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+<script data-ad-client="ca-pub-4376471142277990" async
+  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"s09g.xyz","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="1. 概述一个 Buffer ，本质上是内存中的一块，我们可以将数据写入这块内存，之后从这块内存获取数据。通过将这块内存封装成 NIO Buffer 对象，并提供了一组常用的方法，方便我们对该块内存的读写。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="NIO基础3-Buffer">
+<meta property="og:url" content="http://s09g.xyz/post/92ef4ae1.html">
+<meta property="og:site_name" content="s09g">
+<meta property="og:description" content="1. 概述一个 Buffer ，本质上是内存中的一块，我们可以将数据写入这块内存，之后从这块内存获取数据。通过将这块内存封装成 NIO Buffer 对象，并提供了一组常用的方法，方便我们对该块内存的读写。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/ZhangShiqiu1993/notes/master/Netty/3.NIO%E5%9F%BA%E7%A1%803-Buffer/assets/01.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ZhangShiqiu1993/notes/master/Netty/3.NIO%E5%9F%BA%E7%A1%803-Buffer/assets/02.png">
+<meta property="article:published_time" content="2020-04-16T02:59:33.000Z">
+<meta property="article:modified_time" content="2020-05-13T05:43:38.290Z">
+<meta property="article:author" content="s09g">
+<meta property="article:tag" content="Netty">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/ZhangShiqiu1993/notes/master/Netty/3.NIO%E5%9F%BA%E7%A1%803-Buffer/assets/01.png">
+
+<link rel="canonical" href="http://s09g.xyz/post/92ef4ae1.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>NIO基础3-Buffer | s09g</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-166221552-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-166221552-1');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">s09g</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">10</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">1</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">47</span></a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://s09g.xyz/post/92ef4ae1.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="s09g">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="s09g">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          NIO基础3-Buffer
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-04-15 19:59:33" itemprop="dateCreated datePublished" datetime="2020-04-15T19:59:33-07:00">2020-04-15</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-05-12 22:43:38" itemprop="dateModified" datetime="2020-05-12T22:43:38-07:00">2020-05-12</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="1-概述"><a href="#1-概述" class="headerlink" title="1. 概述"></a>1. 概述</h2><p>一个 Buffer ，本质上是内存中的一块，我们可以将数据写入这块内存，之后从这块内存获取数据。通过将这块内存封装成 NIO Buffer 对象，并提供了一组常用的方法，方便我们对该块内存的读写。</p>
+<a id="more"></a>
+
+<p>Buffer 在 <code>java.nio</code> 包中实现，被定义成<strong>抽象类</strong>，从而实现一组常用的方法。整体类图如下：</p>
+<p><img src="https://raw.githubusercontent.com/ZhangShiqiu1993/notes/master/Netty/3.NIO%E5%9F%BA%E7%A1%803-Buffer/assets/01.png" alt="类图"></p>
+<ul>
+<li>我们可以将 Buffer 理解为<strong>一个数组的封装</strong>，例如 IntBuffer、CharBuffer、ByteBuffer 等分别对应 <code>int[]</code>、<code>char[]</code>、<code>byte[]</code> 等。</li>
+<li>MappedByteBuffer 用于实现内存映射文件</li>
+</ul>
+<h2 id="2-基本属性"><a href="#2-基本属性" class="headerlink" title="2. 基本属性"></a>2. 基本属性</h2><p>Buffer 中有 <strong>4</strong> 个非常重要的属性：<code>capacity</code>、<code>limit</code>、<code>position</code>、<code>mark</code> 。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Buffer</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Invariants: mark &lt;= position &lt;= limit &lt;= capacity</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> mark = -<span class="number">1</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> position = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> limit;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> capacity;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Used only by direct buffers</span></span><br><span class="line">    <span class="comment">// <span class="doctag">NOTE:</span> hoisted here for speed in JNI GetDirectBufferAddress</span></span><br><span class="line">    <span class="keyword">long</span> address;</span><br><span class="line"></span><br><span class="line">    Buffer(<span class="keyword">int</span> mark, <span class="keyword">int</span> pos, <span class="keyword">int</span> lim, <span class="keyword">int</span> cap) &#123;       <span class="comment">// package-private</span></span><br><span class="line">        <span class="keyword">if</span> (cap &lt; <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"Negative capacity: "</span> + cap);</span><br><span class="line">        <span class="keyword">this</span>.capacity = cap;</span><br><span class="line">        limit(lim);</span><br><span class="line">        position(pos);</span><br><span class="line">        <span class="keyword">if</span> (mark &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span> (mark &gt; pos)</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"mark &gt; position: ("</span></span><br><span class="line">                                                   + mark + <span class="string">" &gt; "</span> + pos + <span class="string">")"</span>);</span><br><span class="line">            <span class="keyword">this</span>.mark = mark;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// ... 省略具体方法的代码</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>capacity</code> 属性，容量，Buffer 能容纳的数据元素的<strong>最大值</strong>。这一容量在 Buffer 创建时被赋值，并且<strong>永远不能被修改</strong>。</li>
+<li>Buffer 分成<strong>写模式</strong>和<strong>读模式</strong>两种情况。如下图所示：<br><img src="https://raw.githubusercontent.com/ZhangShiqiu1993/notes/master/Netty/3.NIO%E5%9F%BA%E7%A1%803-Buffer/assets/02.png" alt="写模式 v.s. 读模式"></li>
+</ul>
+<p>从图中，我们可以看到，两种模式下，<code>position</code> 和 <code>limit</code> 属性分别代表不同的含义。</p>
+<ul>
+<li><code>position</code> 属性，位置，初始值为 0 。<ul>
+<li><strong>写</strong>模式下，每往 Buffer 中写入一个值，<code>position</code> 就自动加 1 ，代表下一次的写入位置。</li>
+<li><strong>读</strong>模式下，每从 Buffer 中读取一个值，<code>position</code> 就自动加 1 ，代表下一次的读取位置。( <em>和写模式类似</em> )</li>
+</ul>
+</li>
+<li><code>limit</code> 属性，上限。<ul>
+<li><strong>写</strong>模式下，代表最大能写入的数据上限位置，这个时候 <code>limit</code> 等于 <code>capacity</code> 。</li>
+<li><strong>读</strong>模式下，在 Buffer 完成所有数据写入后，通过调用 <code>#flip()</code> 方法，切换到<strong>读</strong>模式。此时，<code>limit</code> 等于 Buffer 中实际的数据大小。因为 Buffer 不一定被写满，所以不能使用 <code>capacity</code> 作为实际的数据大小。</li>
+</ul>
+</li>
+<li>mark 属性，标记，通过 <code>#mark()</code> 方法，记录当前 <code>position</code> ；通过 <code>reset()</code> 方法，恢复 <code>position</code> 为标记。<ul>
+<li><strong>写</strong>模式下，标记上一次写位置。</li>
+<li><strong>读</strong>模式下，标记上一次读位置。</li>
+</ul>
+</li>
+</ul>
+<p>从代码注释上，我们可以看到，四个属性总是遵循如下大小关系：</p>
+<blockquote>
+<p>mark &lt;= position &lt;= limit &lt;= capacity</p>
+</blockquote>
+<h2 id="3-创建-Buffer"><a href="#3-创建-Buffer" class="headerlink" title="3. 创建 Buffer"></a>3. 创建 Buffer</h2><ol>
+<li>每个 Buffer 实现类，都提供了 <code>#allocate(int capacity)</code> 静态方法，帮助我们快速<strong>实例化</strong>一个 Buffer 对象。以 ByteBuffer 举例子，代码如下：</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ByteBuffer.java</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ByteBuffer <span class="title">allocate</span><span class="params">(<span class="keyword">int</span> capacity)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (capacity &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> HeapByteBuffer(capacity, capacity);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ByteBuffer 实际是个抽象类，返回的是它的<strong>基于堆内( Non-Direct )内存</strong>的实现类 HeapByteBuffer 的对象。</p>
+<ol start="2">
+<li>每个 Buffer 实现类，都提供了 <code>#wrap(array)</code> 静态方法，帮助我们将其对应的数组<strong>包装</strong>成一个 Buffer 对象。还是以 ByteBuffer 举例子，代码如下：</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ByteBuffer.java</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ByteBuffer <span class="title">wrap</span><span class="params">(<span class="keyword">byte</span>[] array, <span class="keyword">int</span> offset, <span class="keyword">int</span> length)</span></span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> HeapByteBuffer(array, offset, length);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IllegalArgumentException x) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IndexOutOfBoundsException();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ByteBuffer <span class="title">wrap</span><span class="params">(<span class="keyword">byte</span>[] array)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> wrap(array, <span class="number">0</span>, array.length);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>和 <code>#allocate(int capacity)</code> 静态方法一样，返回的也是 HeapByteBuffer 的对象。</p>
+<ol start="3">
+<li>每个 Buffer 实现类，都提供了 <code>#allocateDirect(int capacity)</code> 静态方法，帮助我们快速实例化一个 Buffer 对象。以 ByteBuffer 举例子，代码如下：</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ByteBuffer.java</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ByteBuffer <span class="title">allocateDirect</span><span class="params">(<span class="keyword">int</span> capacity)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> DirectByteBuffer(capacity);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>和 <code>#allocate(int capacity)</code> 静态方法不一样，返回的是它的<strong>基于堆外( Direct )内存</strong>的实现类 DirectByteBuffer 的对象。</p>
+<h3 id="3-1-关于-Direct-Buffer-和-Non-Direct-Buffer-的区别"><a href="#3-1-关于-Direct-Buffer-和-Non-Direct-Buffer-的区别" class="headerlink" title="3.1 关于 Direct Buffer 和 Non-Direct Buffer 的区别"></a>3.1 关于 Direct Buffer 和 Non-Direct Buffer 的区别</h3><blockquote>
+<p>FROM <a href="https://segmentfault.com/a/1190000006824155" target="_blank" rel="noopener">《Java NIO 的前生今世 之三 NIO Buffer 详解》</a></p>
+<p><strong>Direct Buffer:</strong></p>
+<ul>
+<li>所分配的内存不在 JVM 堆上, 不受 GC 的管理.(但是 Direct Buffer 的 Java 对象是由 GC 管理的, 因此当发生 GC, 对象被回收时, Direct Buffer 也会被释放)</li>
+<li>因为 Direct Buffer 不在 JVM 堆上分配, 因此 Direct Buffer 对应用程序的内存占用的影响就不那么明显(实际上还是占用了这么多内存, 但是 JVM 不好统计到非 JVM 管理的内存.)</li>
+<li>申请和释放 Direct Buffer 的开销比较大. 因此正确的使用 Direct Buffer 的方式是在初始化时申请一个 Buffer, 然后不断复用此 buffer, 在程序结束后才释放此 buffer.</li>
+<li>使用 Direct Buffer 时, 当进行一些底层的系统 IO 操作时, 效率会比较高, 因为此时 JVM 不需要拷贝 buffer 中的内存到中间临时缓冲区中.</li>
+</ul>
+<p><strong>Non-Direct Buffer:</strong></p>
+<ul>
+<li>直接在 JVM 堆上进行内存的分配, 本质上是 byte[] 数组的封装.</li>
+<li>因为 Non-Direct Buffer 在 JVM 堆中, 因此当进行操作系统底层 IO 操作中时, 会将此 buffer 的内存复制到中间临时缓冲区中. 因此 Non-Direct Buffer 的效率就较低.</li>
+</ul>
+</blockquote>
+<h2 id="4-向-Buffer-写入数据"><a href="#4-向-Buffer-写入数据" class="headerlink" title="4. 向 Buffer 写入数据"></a>4. 向 Buffer 写入数据</h2><p>每个 Buffer 实现类，都提供了 <code>#put(...)</code> 方法，向 Buffer 写入数据。以 ByteBuffer 举例子，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 写入 byte</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> ByteBuffer <span class="title">put</span><span class="params">(<span class="keyword">byte</span> b)</span></span>; </span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> ByteBuffer <span class="title">put</span><span class="params">(<span class="keyword">int</span> index, <span class="keyword">byte</span> b)</span></span>;</span><br><span class="line"><span class="comment">// 写入 byte 数组</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> ByteBuffer <span class="title">put</span><span class="params">(<span class="keyword">byte</span>[] src)</span> </span>&#123; ... &#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> ByteBuffer <span class="title">put</span><span class="params">(<span class="keyword">byte</span>[] src, <span class="keyword">int</span> offset, <span class="keyword">int</span> length)</span> </span>&#123;...&#125;</span><br><span class="line"><span class="comment">// ... 省略，还有其他 put 方法</span></span><br></pre></td></tr></table></figure>
+
+<p>对于 Buffer 来说，有一个非常重要的操作就是，我们要将来自 Channel 的数据写入到 Buffer 中。在系统层面上，这个操作我们称为<strong>读操作</strong>，因为数据是从外部( 文件或者网络等 )读取到内存中。示例如下：</p>
+<blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> num = channel.read(buffer);</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>上述方法会返回从 Channel 中写入到 Buffer 的数据大小。对应方法的代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ReadableByteChannel</span> <span class="keyword">extends</span> <span class="title">Channel</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">read</span><span class="params">(ByteBuffer dst)</span> <span class="keyword">throws</span> IOException</span>;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意，通常在说 NIO 的读操作的时候，我们说的是从 Channel 中读数据到 Buffer 中，对应的是对 Buffer 的写入操作，初学者需要理清楚这个。</p>
+</blockquote>
+<h2 id="5-从-Buffer-读取数据"><a href="#5-从-Buffer-读取数据" class="headerlink" title="5. 从 Buffer 读取数据"></a>5. 从 Buffer 读取数据</h2><p>每个 Buffer 实现类，都提供了 <code>#get(...)</code> 方法，从 Buffer 读取数据。以 ByteBuffer 举例子，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 读取 byte</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">byte</span> <span class="title">get</span><span class="params">()</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">byte</span> <span class="title">get</span><span class="params">(<span class="keyword">int</span> index)</span></span>;</span><br><span class="line"><span class="comment">// 读取 byte 数组</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> ByteBuffer <span class="title">get</span><span class="params">(<span class="keyword">byte</span>[] dst, <span class="keyword">int</span> offset, <span class="keyword">int</span> length)</span> </span>&#123;...&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> ByteBuffer <span class="title">get</span><span class="params">(<span class="keyword">byte</span>[] dst)</span> </span>&#123;...&#125;</span><br><span class="line"><span class="comment">// ... 省略，还有其他 get 方法</span></span><br></pre></td></tr></table></figure>
+
+<p>对于 Buffer 来说，还有一个非常重要的操作就是，我们要讲来向 Channel 的写入 Buffer 中的数据。在系统层面上，这个操作我们称为写操作，因为数据是从内存中写入到外部( 文件或者网络等 )。示例如下：</p>
+<blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt;<span class="keyword">int</span> num = channel.write(buffer);</span><br></pre></td></tr></table></figure>
+</blockquote>
+<p>上述方法会返回向 Channel 中写入 Buffer 的数据大小。对应方法的代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">WritableByteChannel</span> <span class="keyword">extends</span> <span class="title">Channel</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">write</span><span class="params">(ByteBuffer src)</span> <span class="keyword">throws</span> IOException</span>;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="6-rewind-v-s-flip-v-s-clear"><a href="#6-rewind-v-s-flip-v-s-clear" class="headerlink" title="6. rewind() v.s. flip() v.s. clear()"></a>6. rewind() v.s. flip() v.s. clear()</h2><h3 id="6-1-flip"><a href="#6-1-flip" class="headerlink" title="6.1 flip"></a>6.1 flip</h3><p>如果要读取 Buffer 中的数据，需要切换模式，<strong>从写模式切换到读模式</strong>。对应的为 <code>#flip()</code> 方法，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Buffer <span class="title">flip</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    limit = position; <span class="comment">// 设置读取上限</span></span><br><span class="line">    position = <span class="number">0</span>; <span class="comment">// 重置 position</span></span><br><span class="line">    mark = -<span class="number">1</span>; <span class="comment">// 清空 mark</span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用示例，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">buf.put(magic);    <span class="comment">// Prepend header</span></span><br><span class="line">in.read(buf);      <span class="comment">// Read data into rest of buffer</span></span><br><span class="line">buf.flip();        <span class="comment">// Flip buffer</span></span><br><span class="line">channel.write(buf);    <span class="comment">// Write header + data to channel</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="6-2-rewind"><a href="#6-2-rewind" class="headerlink" title="6.2 rewind"></a>6.2 rewind</h3><p><code>#rewind()</code> 方法，可以<strong>重置</strong> <code>position</code> 的值为 0 。因此，我们可以重新<strong>读取和写入</strong> Buffer 了。</p>
+<p>大多数情况下，该方法主要针对于<strong>读模式</strong>，所以可以翻译为“倒带”。也就是说，和我们当年的磁带倒回去是一个意思。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Buffer <span class="title">rewind</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    position = <span class="number">0</span>; <span class="comment">// 重置 position</span></span><br><span class="line">    mark = -<span class="number">1</span>; <span class="comment">// 清空 mark</span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从代码上，和 <code>#flip()</code> 相比，非常类似，除了少了第一行的 <code>limit = position</code> 的代码块。</p>
+<p>使用示例，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">channel.write(buf);    <span class="comment">// Write remaining data</span></span><br><span class="line">buf.rewind();      <span class="comment">// Rewind buffer</span></span><br><span class="line">buf.get(array);    <span class="comment">// Copy data into array</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="6-3-clear"><a href="#6-3-clear" class="headerlink" title="6.3 clear"></a>6.3 clear</h3><p><code>#clear()</code> 方法，可以“<strong>重置</strong>” Buffer 的数据。因此，我们可以重新<strong>读取和写入</strong> Buffer 了。</p>
+<p>大多数情况下，该方法主要针对于<strong>写模式</strong>。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Buffer <span class="title">clear</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    position = <span class="number">0</span>; <span class="comment">// 重置 position</span></span><br><span class="line">    limit = capacity; <span class="comment">// 恢复 limit 为 capacity</span></span><br><span class="line">    mark = -<span class="number">1</span>; <span class="comment">// 清空 mark</span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>从源码上，我们可以看出，Buffer 的数据实际并未清理掉，所以使用时需要注意。</li>
+<li>读模式下，尽量不要调用 <code>#clear()</code> 方法，因为 <code>limit</code> 可能会被错误的赋值为 <code>capacity</code> 。相比来说，调用 <code>#rewind()</code> 更合理，如果有重读的需求。</li>
+</ul>
+<p>使用示例，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">buf.clear();     <span class="comment">// Prepare buffer for reading</span></span><br><span class="line">in.read(buf);    <span class="comment">// Read data</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="7-mark-搭配-reset"><a href="#7-mark-搭配-reset" class="headerlink" title="7. mark() 搭配 reset()"></a>7. mark() 搭配 reset()</h2><h3 id="7-1-mark"><a href="#7-1-mark" class="headerlink" title="7.1 mark"></a>7.1 mark</h3><p><code>#mark()</code> 方法，保存当前的 <code>position</code> 到 <code>mark</code> 中。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Buffer <span class="title">mark</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    mark = position;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-2-reset"><a href="#7-2-reset" class="headerlink" title="7.2 reset"></a>7.2 reset</h3><p><code>#reset()</code> 方法，恢复当前的 <code>postion</code> 为 <code>mark</code> 。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Buffer <span class="title">reset</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> m = mark;</span><br><span class="line">    <span class="keyword">if</span> (m &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> InvalidMarkException();</span><br><span class="line">    position = m;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="8-其它方法"><a href="#8-其它方法" class="headerlink" title="8. 其它方法"></a>8. 其它方法</h2><p>Buffer 中还有其它方法，比较简单，代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ========== capacity ==========</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">capacity</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> capacity;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ========== position ==========</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">position</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> position;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Buffer <span class="title">position</span><span class="params">(<span class="keyword">int</span> newPosition)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> ((newPosition &gt; limit) || (newPosition &lt; <span class="number">0</span>))</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();</span><br><span class="line">    position = newPosition;</span><br><span class="line">    <span class="keyword">if</span> (mark &gt; position) mark = -<span class="number">1</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ========== limit ==========</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">limit</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> limit;</span><br><span class="line">&#125;</span><br><span class="line">    </span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> Buffer <span class="title">limit</span><span class="params">(<span class="keyword">int</span> newLimit)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> ((newLimit &gt; capacity) || (newLimit &lt; <span class="number">0</span>))</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();</span><br><span class="line">    limit = newLimit;</span><br><span class="line">    <span class="keyword">if</span> (position &gt; limit) position = limit;</span><br><span class="line">    <span class="keyword">if</span> (mark &gt; limit) mark = -<span class="number">1</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ========== mark ==========</span></span><br><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">int</span> <span class="title">markValue</span><span class="params">()</span> </span>&#123;                             <span class="comment">// package-private</span></span><br><span class="line">    <span class="keyword">return</span> mark;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">void</span> <span class="title">discardMark</span><span class="params">()</span> </span>&#123;                          <span class="comment">// package-private</span></span><br><span class="line">    mark = -<span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ========== 数组相关 ==========</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">remaining</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> limit - position;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">hasRemaining</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> position &lt; limit;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">boolean</span> <span class="title">hasArray</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> Object <span class="title">array</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">int</span> <span class="title">arrayOffset</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">boolean</span> <span class="title">isDirect</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ========== 下一个读 / 写 position ==========</span></span><br><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">int</span> <span class="title">nextGetIndex</span><span class="params">()</span> </span>&#123;                          <span class="comment">// package-private</span></span><br><span class="line">    <span class="keyword">if</span> (position &gt;= limit)</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> BufferUnderflowException();</span><br><span class="line">    <span class="keyword">return</span> position++;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">int</span> <span class="title">nextGetIndex</span><span class="params">(<span class="keyword">int</span> nb)</span> </span>&#123;                    <span class="comment">// package-private</span></span><br><span class="line">    <span class="keyword">if</span> (limit - position &lt; nb)</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> BufferUnderflowException();</span><br><span class="line">    <span class="keyword">int</span> p = position;</span><br><span class="line">    position += nb;</span><br><span class="line">    <span class="keyword">return</span> p;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">int</span> <span class="title">nextPutIndex</span><span class="params">()</span> </span>&#123;                          <span class="comment">// package-private</span></span><br><span class="line">    <span class="keyword">if</span> (position &gt;= limit)</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> BufferOverflowException();</span><br><span class="line">    <span class="keyword">return</span> position++;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">int</span> <span class="title">nextPutIndex</span><span class="params">(<span class="keyword">int</span> nb)</span> </span>&#123;                    <span class="comment">// package-private</span></span><br><span class="line">    <span class="keyword">if</span> (limit - position &lt; nb)</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> BufferOverflowException();</span><br><span class="line">    <span class="keyword">int</span> p = position;</span><br><span class="line">    position += nb;</span><br><span class="line">    <span class="keyword">return</span> p;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">int</span> <span class="title">checkIndex</span><span class="params">(<span class="keyword">int</span> i)</span> </span>&#123;                       <span class="comment">// package-private</span></span><br><span class="line">    <span class="keyword">if</span> ((i &lt; <span class="number">0</span>) || (i &gt;= limit))</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IndexOutOfBoundsException();</span><br><span class="line">    <span class="keyword">return</span> i;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">int</span> <span class="title">checkIndex</span><span class="params">(<span class="keyword">int</span> i, <span class="keyword">int</span> nb)</span> </span>&#123;               <span class="comment">// package-private</span></span><br><span class="line">    <span class="keyword">if</span> ((i &lt; <span class="number">0</span>) || (nb &gt; limit - i))</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IndexOutOfBoundsException();</span><br><span class="line">    <span class="keyword">return</span> i;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ========== 其它方法 ==========</span></span><br><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">void</span> <span class="title">truncate</span><span class="params">()</span> </span>&#123;                             <span class="comment">// package-private</span></span><br><span class="line">    mark = -<span class="number">1</span>;</span><br><span class="line">    position = <span class="number">0</span>;</span><br><span class="line">    limit = <span class="number">0</span>;</span><br><span class="line">    capacity = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">checkBounds</span><span class="params">(<span class="keyword">int</span> off, <span class="keyword">int</span> len, <span class="keyword">int</span> size)</span> </span>&#123; <span class="comment">// package-private</span></span><br><span class="line">    <span class="keyword">if</span> ((off | len | (off + len) | (size - (off + len))) &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IndexOutOfBoundsException();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Netty/" rel="tag"># Netty</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/post/319f6e60.html" rel="prev" title="NIO基础2-Channel">
+      <i class="fa fa-chevron-left"></i> NIO基础2-Channel
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/post/3e154191.html" rel="next" title="NIO基础4-Selector">
+      NIO基础4-Selector <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-概述"><span class="nav-number">1.</span> <span class="nav-text">1. 概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-基本属性"><span class="nav-number">2.</span> <span class="nav-text">2. 基本属性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-创建-Buffer"><span class="nav-number">3.</span> <span class="nav-text">3. 创建 Buffer</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-关于-Direct-Buffer-和-Non-Direct-Buffer-的区别"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 关于 Direct Buffer 和 Non-Direct Buffer 的区别</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-向-Buffer-写入数据"><span class="nav-number">4.</span> <span class="nav-text">4. 向 Buffer 写入数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-从-Buffer-读取数据"><span class="nav-number">5.</span> <span class="nav-text">5. 从 Buffer 读取数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-rewind-v-s-flip-v-s-clear"><span class="nav-number">6.</span> <span class="nav-text">6. rewind() v.s. flip() v.s. clear()</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-flip"><span class="nav-number">6.1.</span> <span class="nav-text">6.1 flip</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-rewind"><span class="nav-number">6.2.</span> <span class="nav-text">6.2 rewind</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-clear"><span class="nav-number">6.3.</span> <span class="nav-text">6.3 clear</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-mark-搭配-reset"><span class="nav-number">7.</span> <span class="nav-text">7. mark() 搭配 reset()</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#7-1-mark"><span class="nav-number">7.1.</span> <span class="nav-text">7.1 mark</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-2-reset"><span class="nav-number">7.2.</span> <span class="nav-text">7.2 reset</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-其它方法"><span class="nav-number">8.</span> <span class="nav-text">8. 其它方法</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">s09g</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">s09g</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

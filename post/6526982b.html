@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+<script data-ad-client="ca-pub-4376471142277990" async
+  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"s09g.xyz","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="本文主要基于 Spring 5.0.6.RELEASE 在《加载 Definitions》 中提到，在核心逻辑方法 #doLoadBeanDefinitions(InputSource inputSource, Resource resource) 方法中，中主要是做三件事情：  调用 #getValidationModeForResource(Resource resource) 方法，获取指定">
+<meta property="og:type" content="article">
+<meta property="og:title" content="获取验证模型">
+<meta property="og:url" content="http://s09g.xyz/post/6526982b.html">
+<meta property="og:site_name" content="s09g">
+<meta property="og:description" content="本文主要基于 Spring 5.0.6.RELEASE 在《加载 Definitions》 中提到，在核心逻辑方法 #doLoadBeanDefinitions(InputSource inputSource, Resource resource) 方法中，中主要是做三件事情：  调用 #getValidationModeForResource(Resource resource) 方法，获取指定">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-10-21T02:59:33.000Z">
+<meta property="article:modified_time" content="2020-05-05T03:30:37.419Z">
+<meta property="article:author" content="s09g">
+<meta property="article:tag" content="Spring">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://s09g.xyz/post/6526982b.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>获取验证模型 | s09g</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-166221552-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-166221552-1');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">s09g</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">10</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">1</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">47</span></a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://s09g.xyz/post/6526982b.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="s09g">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="s09g">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          获取验证模型
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-10-20 19:59:33" itemprop="dateCreated datePublished" datetime="2019-10-20T19:59:33-07:00">2019-10-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-05-04 20:30:37" itemprop="dateModified" datetime="2020-05-04T20:30:37-07:00">2020-05-04</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><em>本文主要基于 Spring 5.0.6.RELEASE</em></p>
+<p>在《加载 Definitions》 中提到，在核心逻辑方法 <code>#doLoadBeanDefinitions(InputSource inputSource, Resource resource)</code> 方法中，中主要是做三件事情：</p>
+<ol>
+<li>调用 <code>#getValidationModeForResource(Resource resource)</code> 方法，获取指定资源（xml）的<strong>验证模式</strong>。</li>
+<li>调用 <code>DocumentLoader#loadDocument(InputSource inputSource, EntityResolver entityResolver,ErrorHandler errorHandler, int validationMode, boolean namespaceAware)</code> 方法，获取 XML Document 实例。</li>
+<li>调用 <code>#registerBeanDefinitions(Document doc, Resource resource)</code> 方法，根据获取的 Document 实例，注册 Bean 信息。</li>
+</ol>
+<a id="more"></a>
+
+
+<p>这篇主要分析获取 xml 文件的验证模式。为什么需要获取验证模式呢？原因如下：</p>
+<blockquote>
+<p>XML 文件的验证模式保证了 XML 文件的正确性。</p>
+</blockquote>
+<h2 id="1-DTD-与-XSD-的区别"><a href="#1-DTD-与-XSD-的区别" class="headerlink" title="1. DTD 与 XSD 的区别"></a>1. DTD 与 XSD 的区别</h2><h3 id="1-1-DTD"><a href="#1-1-DTD" class="headerlink" title="1.1 DTD"></a>1.1 DTD</h3><p>DTD(Document Type Definition)，即文档类型定义，为 XML 文件的验证机制，属于 XML 文件中组成的一部分。DTD 是一种保证 XML 文档格式正确的有效验证方式，它定义了相关 XML 文档的元素、属性、排列方式、元素的内容类型以及元素的层次结构。其实 DTD 就相当于 XML 中的 “词汇”和“语法”，我们可以通过比较 XML 文件和 DTD 文件 来看文档是否符合规范，元素和标签使用是否正确。</p>
+<p>要在 Spring 中使用 DTD，需要在 Spring XML 文件头部声明：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span></span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="meta-keyword">beans</span> <span class="meta-keyword">PUBLIC</span>  <span class="meta-string">"-//SPRING//DTD BEAN//EN"</span>  <span class="meta-string">"http://www.springframework.org/dtd/spring-beans.dtd"</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>DTD 在一定的阶段推动了 XML 的发展，但是它本身存在着一些<strong>缺陷</strong>：</p>
+<ol>
+<li>它没有使用 XML 格式，而是自己定义了一套格式，相对解析器的重用性较差；而且 DTD 的构建和访问没有标准的编程接口，因而解析器很难简单的解析 DTD 文档。</li>
+<li>DTD 对元素的类型限制较少；同时其他的约束力也叫弱。</li>
+<li>DTD 扩展能力较差。</li>
+<li>基于正则表达式的 DTD 文档的描述能力有限。</li>
+</ol>
+<h3 id="1-2-XSD"><a href="#1-2-XSD" class="headerlink" title="1.2 XSD"></a>1.2 XSD</h3><p>针对 DTD 的缺陷，W3C 在 2001 年推出 XSD。XSD（XML Schemas Definition）即 XML Schema 语言。XML Schema 本身就是一个 XML文档，使用的是 XML 语法，因此可以很方便的解析 XSD 文档。相对于 DTD，XSD 具有如下<strong>优势</strong>：</p>
+<ol>
+<li>XML Schema 基于 XML ，没有专门的语法。</li>
+<li>XML Schema 可以象其他 XML 文件一样解析和处理。</li>
+<li>XML Schema 比 DTD 提供了更丰富的数据类型。</li>
+<li>XML Schema 提供可扩充的数据模型。</li>
+<li>XML Schema 支持综合命名空间。</li>
+<li>XML Schema 支持属性组。</li>
+</ol>
+<h2 id="2-getValidationModeForResource"><a href="#2-getValidationModeForResource" class="headerlink" title="2. getValidationModeForResource"></a>2. getValidationModeForResource</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// XmlBeanDefinitionReader.java</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 禁用验证模式</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> VALIDATION_NONE = XmlValidationModeDetector.VALIDATION_NONE;</span><br><span class="line"><span class="comment">// 自动获取验证模式</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> VALIDATION_AUTO = XmlValidationModeDetector.VALIDATION_AUTO;</span><br><span class="line"><span class="comment">// DTD 验证模式</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> VALIDATION_DTD = XmlValidationModeDetector.VALIDATION_DTD;</span><br><span class="line"><span class="comment">// XSD 验证模式</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> VALIDATION_XSD = XmlValidationModeDetector.VALIDATION_XSD;</span><br><span class="line">	</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 验证模式。默认为自动模式。</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">int</span> validationMode = VALIDATION_AUTO;</span><br><span class="line">	</span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">int</span> <span class="title">getValidationModeForResource</span><span class="params">(Resource resource)</span> </span>&#123;</span><br><span class="line">	<span class="comment">// &lt;1&gt; 获取指定的验证模式</span></span><br><span class="line">	<span class="keyword">int</span> validationModeToUse = getValidationMode();</span><br><span class="line">	<span class="comment">// 首先，如果手动指定，则直接返回</span></span><br><span class="line">	<span class="keyword">if</span> (validationModeToUse != VALIDATION_AUTO) &#123;</span><br><span class="line">		<span class="keyword">return</span> validationModeToUse;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 其次，自动获取验证模式</span></span><br><span class="line">	<span class="keyword">int</span> detectedMode = detectValidationMode(resource);</span><br><span class="line">	<span class="keyword">if</span> (detectedMode != VALIDATION_AUTO) &#123;</span><br><span class="line">		<span class="keyword">return</span> detectedMode;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 最后，使用 VALIDATION_XSD 做为默认</span></span><br><span class="line">	<span class="comment">// Hmm, we didn't get a clear indication... Let's assume XSD,</span></span><br><span class="line">	<span class="comment">// since apparently no DTD declaration has been found up until</span></span><br><span class="line">	<span class="comment">// detection stopped (before finding the document's root tag).</span></span><br><span class="line">	<span class="keyword">return</span> VALIDATION_XSD;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>&lt;1&gt;</code> 处，调用 <code>#getValidationMode()</code> 方法，获取指定的验证模式( <code>validationMode</code> )。如果有手动指定，则直接返回。另外，对对于 <code>validationMode</code> 属性的设置和获得的代码，代码如下：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setValidationMode</span><span class="params">(<span class="keyword">int</span> validationMode)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">this</span>.validationMode = validationMode;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getValidationMode</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">this</span>.validationMode;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>&lt;2&gt;</code> 处，调用 <code>#detectValidationMode(Resource resource)</code> 方法，自动获取验证模式。代码如下：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * XML 验证模式探测器</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> XmlValidationModeDetector validationModeDetector = <span class="keyword">new</span> XmlValidationModeDetector();</span><br><span class="line">	</span><br><span class="line">  <span class="function"><span class="keyword">protected</span> <span class="keyword">int</span> <span class="title">detectValidationMode</span><span class="params">(Resource resource)</span> </span>&#123;</span><br><span class="line"><span class="comment">// 不可读，抛出 BeanDefinitionStoreException 异常</span></span><br><span class="line">  	<span class="keyword">if</span> (resource.isOpen()) &#123;</span><br><span class="line">  		<span class="keyword">throw</span> <span class="keyword">new</span> BeanDefinitionStoreException(</span><br><span class="line">  				<span class="string">"Passed-in Resource ["</span> + resource + <span class="string">"] contains an open stream: "</span> +</span><br><span class="line">  				<span class="string">"cannot determine validation mode automatically. Either pass in a Resource "</span> +</span><br><span class="line">  				<span class="string">"that is able to create fresh streams, or explicitly specify the validationMode "</span> +</span><br><span class="line">  				<span class="string">"on your XmlBeanDefinitionReader instance."</span>);</span><br><span class="line">  	&#125;</span><br><span class="line">  </span><br><span class="line">  	<span class="comment">// 打开 InputStream 流</span></span><br><span class="line">  	InputStream inputStream;</span><br><span class="line">  	<span class="keyword">try</span> &#123;</span><br><span class="line">  		inputStream = resource.getInputStream();</span><br><span class="line">  	&#125; <span class="keyword">catch</span> (IOException ex) &#123;</span><br><span class="line">  		<span class="keyword">throw</span> <span class="keyword">new</span> BeanDefinitionStoreException(</span><br><span class="line">  				<span class="string">"Unable to determine validation mode for ["</span> + resource + <span class="string">"]: cannot open InputStream. "</span> +</span><br><span class="line">  				<span class="string">"Did you attempt to load directly from a SAX InputSource without specifying the "</span> +</span><br><span class="line">  				<span class="string">"validationMode on your XmlBeanDefinitionReader instance?"</span>, ex);</span><br><span class="line">  	&#125;</span><br><span class="line">  </span><br><span class="line">  	<span class="comment">// &lt;x&gt; 获取相应的验证模式</span></span><br><span class="line">  	<span class="keyword">try</span> &#123;</span><br><span class="line">  		<span class="keyword">return</span> <span class="keyword">this</span>.validationModeDetector.detectValidationMode(inputStream);</span><br><span class="line">  	&#125; <span class="keyword">catch</span> (IOException ex) &#123;</span><br><span class="line">  		<span class="keyword">throw</span> <span class="keyword">new</span> BeanDefinitionStoreException(<span class="string">"Unable to determine validation mode for ["</span> +</span><br><span class="line">  				resource + <span class="string">"]: an error occurred whilst reading from the InputStream."</span>, ex);</span><br><span class="line">  	&#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>核心在于 <code>&lt;x&gt;</code> 处，调用 <code>XmlValidationModeDetector#detectValidationMode(InputStream inputStream)</code> 方法，获取相应的验证模式。详细解析，见 <a href="#3-XmlValidationModeDetector">3. XmlValidationModeDetector</a> 中。</li>
+<li><code>&lt;3&gt;</code> 处，使用 <code>VALIDATION_XSD</code> 做为默认。</li>
+</ul>
+<h2 id="3-XmlValidationModeDetector"><a href="#3-XmlValidationModeDetector" class="headerlink" title="3. XmlValidationModeDetector"></a>3. XmlValidationModeDetector</h2><p><code>org.springframework.util.xml.XmlValidationModeDetector</code> ，XML 验证模式探测器。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">detectValidationMode</span><span class="params">(InputStream inputStream)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    <span class="comment">// Peek into the file to look for DOCTYPE.</span></span><br><span class="line">    BufferedReader reader = <span class="keyword">new</span> BufferedReader(<span class="keyword">new</span> InputStreamReader(inputStream));</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 是否为 DTD 校验模式。默认为，非 DTD 模式，即 XSD 模式</span></span><br><span class="line">        <span class="keyword">boolean</span> isDtdValidated = <span class="keyword">false</span>;</span><br><span class="line">        String content;</span><br><span class="line">        <span class="comment">// &lt;0&gt; 循环，逐行读取 XML 文件的内容</span></span><br><span class="line">        <span class="keyword">while</span> ((content = reader.readLine()) != <span class="keyword">null</span>) &#123;</span><br><span class="line">            content = consumeCommentTokens(content);</span><br><span class="line">            <span class="comment">// 跳过，如果是注释，或者</span></span><br><span class="line">            <span class="keyword">if</span> (<span class="keyword">this</span>.inComment || !StringUtils.hasText(content)) &#123;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// &lt;1&gt; 包含 DOCTYPE 为 DTD 模式</span></span><br><span class="line">            <span class="keyword">if</span> (hasDoctype(content)) &#123;</span><br><span class="line">                isDtdValidated = <span class="keyword">true</span>;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// &lt;2&gt;  hasOpeningTag 方法会校验，如果这一行有 &lt; ，并且 &lt; 后面跟着的是字母，则返回 true 。</span></span><br><span class="line">            <span class="keyword">if</span> (hasOpeningTag(content)) &#123;</span><br><span class="line">                <span class="comment">// End of meaningful data...</span></span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 返回 VALIDATION_DTD or VALIDATION_XSD 模式</span></span><br><span class="line">        <span class="keyword">return</span> (isDtdValidated ? VALIDATION_DTD : VALIDATION_XSD);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (CharConversionException ex) &#123;</span><br><span class="line">           </span><br><span class="line">        <span class="comment">// &lt;3&gt; 返回 VALIDATION_AUTO 模式</span></span><br><span class="line">        <span class="comment">// Choked on some character encoding...</span></span><br><span class="line">        <span class="comment">// Leave the decision up to the caller.</span></span><br><span class="line">        <span class="keyword">return</span> VALIDATION_AUTO;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        reader.close();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>&lt;0&gt;</code> 处，从代码中看，主要是通过读取 XML 文件的内容，来进行自动判断。</li>
+<li><code>&lt;1&gt;</code> 处，调用 <code>#hasDoctype(String content)</code> 方法，判断内容中如果包含有 <code>&quot;DOCTYPE“</code> ，则为 DTD 验证模式。代码如下：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * The token in a XML document that declares the DTD to use for validation</span></span><br><span class="line"><span class="comment"> * and thus that DTD validation is being used.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String DOCTYPE = <span class="string">"DOCTYPE"</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">hasDoctype</span><span class="params">(String content)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">return</span> content.contains(DOCTYPE);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>&lt;2&gt;</code> 处，调用 <code>#hasOpeningTag(String content)</code> 方法，判断如果这一行包含 <code>&lt;</code> ，并且 <code>&lt;</code> 紧跟着的是字母，则为 XSD 验证模式。代码如下：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Does the supplied content contain an XML opening tag. If the parse state is currently</span></span><br><span class="line"><span class="comment"> * in an XML comment then this method always returns false. It is expected that all comment</span></span><br><span class="line"><span class="comment"> * tokens will have consumed for the supplied content before passing the remainder to this method.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">hasOpeningTag</span><span class="params">(String content)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (<span class="keyword">this</span>.inComment) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">int</span> openTagIndex = content.indexOf(<span class="string">'&lt;'</span>);</span><br><span class="line">	<span class="keyword">return</span> (openTagIndex &gt; -<span class="number">1</span> <span class="comment">// &lt; 存在</span></span><br><span class="line">            &amp;&amp; (content.length() &gt; openTagIndex + <span class="number">1</span>) <span class="comment">// &lt; 后面还有内容</span></span><br><span class="line">            &amp;&amp; Character.isLetter(content.charAt(openTagIndex + <span class="number">1</span>))); <span class="comment">// &lt; 后面的内容是字幕</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>&lt;3&gt;</code> 处，如果发生 CharConversionException 异常，则为 <code>VALIDATION_AUTO</code> 模式。</li>
+<li>关于 <code>#consumeCommentTokens(String content)</code> 方法，代码比较复杂。感兴趣的胖友可以看看。代码如下：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * The token that indicates the start of an XML comment.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String START_COMMENT = <span class="string">"&lt;!--"</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * The token that indicates the end of an XML comment.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String END_COMMENT = <span class="string">"--&gt;"</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Consumes all the leading comment data in the given String and returns the remaining content, which</span></span><br><span class="line"><span class="comment"> * may be empty since the supplied content might be all comment data. For our purposes it is only important</span></span><br><span class="line"><span class="comment"> * to strip leading comment content on a line since the first piece of non comment content will be either</span></span><br><span class="line"><span class="comment"> * the DOCTYPE declaration or the root element of the document.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> String <span class="title">consumeCommentTokens</span><span class="params">(String line)</span> </span>&#123;</span><br><span class="line">	<span class="comment">// 非注释</span></span><br><span class="line">	<span class="keyword">if</span> (!line.contains(START_COMMENT) &amp;&amp; !line.contains(END_COMMENT)) &#123;</span><br><span class="line">		<span class="keyword">return</span> line;</span><br><span class="line">	&#125;</span><br><span class="line">	String currLine = line;</span><br><span class="line">	<span class="keyword">while</span> ((currLine = consume(currLine)) != <span class="keyword">null</span>) &#123;</span><br><span class="line">		<span class="keyword">if</span> (!<span class="keyword">this</span>.inComment &amp;&amp; !currLine.trim().startsWith(START_COMMENT)) &#123;</span><br><span class="line">			<span class="keyword">return</span> currLine;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Consume the next comment token, update the "inComment" flag</span></span><br><span class="line"><span class="comment"> * and return the remaining content.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> String <span class="title">consume</span><span class="params">(String line)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">int</span> index = (<span class="keyword">this</span>.inComment ? endComment(line) : startComment(line));</span><br><span class="line">	<span class="keyword">return</span> (index == -<span class="number">1</span> ? <span class="keyword">null</span> : line.substring(index));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Try to consume the &#123;<span class="doctag">@link</span> #START_COMMENT&#125; token.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span> #commentToken(String, String, boolean)</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">startComment</span><span class="params">(String line)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">return</span> commentToken(line, START_COMMENT, <span class="keyword">true</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">endComment</span><span class="params">(String line)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">return</span> commentToken(line, END_COMMENT, <span class="keyword">false</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Try to consume the supplied token against the supplied content and update the</span></span><br><span class="line"><span class="comment"> * in comment parse state to the supplied value. Returns the index into the content</span></span><br><span class="line"><span class="comment"> * which is after the token or -1 if the token is not found.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">commentToken</span><span class="params">(String line, String token, <span class="keyword">boolean</span> inCommentIfPresent)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">int</span> index = line.indexOf(token);</span><br><span class="line">	<span class="keyword">if</span> (index &gt; - <span class="number">1</span>) &#123;</span><br><span class="line">		<span class="keyword">this</span>.inComment = inCommentIfPresent;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> (index == -<span class="number">1</span> ? index : index + token.length());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以下两篇文章，有一定的辅助：</p>
+<ul>
+<li><a href="https://blog.csdn.net/ljz2016/article/details/82686884" target="_blank" rel="noopener">spring源码（六）–XmlValidationModeDetector（获取xml文档校验模式）</a></li>
+<li><a href="https://my.oschina.net/u/3579120/blog/1532852" target="_blank" rel="noopener">XmlValidationModeDetector</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Spring/" rel="tag"># Spring</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/post/d89e7b20.html" rel="prev" title="注册BeanDefinition">
+      <i class="fa fa-chevron-left"></i> 注册BeanDefinition
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/post/629c7bf1.html" rel="next" title="获取 Document 对象">
+      获取 Document 对象 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-DTD-与-XSD-的区别"><span class="nav-number">1.</span> <span class="nav-text">1. DTD 与 XSD 的区别</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-DTD"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 DTD</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-XSD"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 XSD</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-getValidationModeForResource"><span class="nav-number">2.</span> <span class="nav-text">2. getValidationModeForResource</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-XmlValidationModeDetector"><span class="nav-number">3.</span> <span class="nav-text">3. XmlValidationModeDetector</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">s09g</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">s09g</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

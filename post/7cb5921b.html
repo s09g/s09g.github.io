@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+<script data-ad-client="ca-pub-4376471142277990" async
+  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"s09g.xyz","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="什么才是真正的云计算？目前有许多云服务供应商。全球市场上，Google主要的竞争对手是AWS和Azure. GCP内部也经常拿AWS作为对比和参照。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Cloud History">
+<meta property="og:url" content="http://s09g.xyz/post/7cb5921b.html">
+<meta property="og:site_name" content="s09g">
+<meta property="og:description" content="什么才是真正的云计算？目前有许多云服务供应商。全球市场上，Google主要的竞争对手是AWS和Azure. GCP内部也经常拿AWS作为对比和参照。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://s09g.xyz/uploads/Cloud/1.png">
+<meta property="og:image" content="http://s09g.xyz/uploads/Cloud/2.png">
+<meta property="og:image" content="http://s09g.xyz/uploads/Cloud/3.png">
+<meta property="article:published_time" content="2019-08-03T02:59:33.000Z">
+<meta property="article:modified_time" content="2020-05-05T03:28:18.585Z">
+<meta property="article:author" content="s09g">
+<meta property="article:tag" content="云计算">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://s09g.xyz/uploads/Cloud/1.png">
+
+<link rel="canonical" href="http://s09g.xyz/post/7cb5921b.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Cloud History | s09g</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-166221552-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-166221552-1');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">s09g</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">10</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">1</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">47</span></a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://s09g.xyz/post/7cb5921b.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="s09g">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="s09g">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Cloud History
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-08-02 19:59:33" itemprop="dateCreated datePublished" datetime="2019-08-02T19:59:33-07:00">2019-08-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-05-04 20:28:18" itemprop="dateModified" datetime="2020-05-04T20:28:18-07:00">2020-05-04</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="什么才是真正的云计算？"><a href="#什么才是真正的云计算？" class="headerlink" title="什么才是真正的云计算？"></a>什么才是真正的云计算？</h2><p>目前有许多云服务供应商。全球市场上，Google主要的竞争对手是AWS和Azure. GCP内部也经常拿AWS作为对比和参照。<br></p>
+<a id="more"></a>
+
+
+<p>Amazon Web Services (AWS) 三个最流行的服务是<strong>EC2</strong>, <strong>S3</strong>和<strong>EBS</strong><br><br></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Service</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>EC2</td>
+<td>弹性计算云</td>
+<td>提供了基础云计算服务</td>
+</tr>
+<tr>
+<td>S3</td>
+<td>存储服务</td>
+<td>提供了在云上存储数据的能力</td>
+</tr>
+<tr>
+<td>EBS</td>
+<td>弹性块存储卷服务</td>
+<td>这种基础的块存储卷能够让EC2实例在运行状态下直接访问</td>
+</tr>
+</tbody></table>
+<br>
+
+<h4 id="目前主要有两种类型的云，-公有云服务或私有云服务。"><a href="#目前主要有两种类型的云，-公有云服务或私有云服务。" class="headerlink" title="目前主要有两种类型的云， 公有云服务或私有云服务。"></a>目前主要有两种类型的云， 公有云服务或私有云服务。</h4><ol>
+<li>私有云服务是一种能够 仅被特定授权的个人访问的云, 不对外部或公开的访问开放。 </li>
+<li>公有云能够被任何人访问，只要愿意支付云服务费用<br>
+
+</li>
+</ol>
+<h4 id="云计算可以同时节约时间和金钱成本。"><a href="#云计算可以同时节约时间和金钱成本。" class="headerlink" title="云计算可以同时节约时间和金钱成本。"></a>云计算可以同时节约时间和金钱成本。</h4><p><em>reported from Eli Lilly （AWS客户）</em> <br></p>
+<ul>
+<li>使用云之前：一般会需要<strong>7周半</strong>的时间来部署一台新服务器。<ul>
+<li>包括设置服务器的规格， 购买， 批准购买过程， 服务器运抵和设置， 安装必要的操作系统和软件， 所有这些加起来需要花费几周时间。 </li>
+</ul>
+</li>
+<li>使用云之后：3分钟左右时间购买新的服务器， 在5分钟内获得一个64-node Linux的集群系统</li>
+</ul>
+<h3 id="什么是云"><a href="#什么是云" class="headerlink" title="什么是云"></a>什么是云</h3><p>云不仅是计算、存储、资源， 也包含了网络等等方面。一个云由一系列的存储资源组成<br><br><br>有两种云的结：<strong>单节点云</strong>，<strong>地理分布式云</strong> </p>
+<ol>
+<li>单节点云，经常也被成为数据中心， 由以下几个部分组成<ul>
+<li>多个服务器或者计算节点。<ul>
+<li>它们被分成多个模块或服务器机架。</li>
+<li>一个机架是包含多个服务器的一个单元（一般，这些服务器分享共同的电源，而且分享一个<strong>架顶交换机</strong>）</li>
+</ul>
+</li>
+<li><strong>架顶交换机</strong>被连接进一个网络拓扑结构<ul>
+<li>比如树状拓扑或分级拓扑</li>
+<li>最流行的是一个两级的树拓扑：在一个层级上有<strong>机架机顶</strong>并且有<strong>核心交换机</strong>连接 所有的机顶，并且机顶互相连接。</li>
+<li><img src="/uploads/Cloud/1.png" alt=""></li>
+</ul>
+</li>
+<li>后端节点 (计算服务器的节点)，这些节点主要还是用于<strong>存储</strong>。<ul>
+<li>节点上可连接SSD，或者更大更多的硬盘。 </li>
+</ul>
+</li>
+<li>面向用户服务器<ul>
+<li>用于接收客户端请求，或者用户提交工作</li>
+</ul>
+</li>
+<li>软件层<ul>
+<li>包含操作系统、用户级应用、IP协议、 交换机、路由器，还有其他的路由协议</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>一般来说，这样的数据中心会被安置在单独的建筑或单独的栈点中<br><br>大公司可能有多种的地理分布式的数据中心，这些地理分布数据中心互相连接,每个节点都是一个数据中心这通常被称为地理分布云。 </li>
+</ol>
+<h2 id="云计算的历史"><a href="#云计算的历史" class="headerlink" title="云计算的历史"></a>云计算的历史</h2><p><strong>cloud history of time</strong></p>
+<table>
+<thead>
+<tr>
+<th>Time</th>
+<th>代表</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>上世纪40年代至50年代</td>
+<td>早期建造的计算机（ENIAC, ORDVAC, ILLIAC…）</td>
+<td>占据了整栋大厂房或实验室</td>
+</tr>
+<tr>
+<td>20世纪的60年代和70年代</td>
+<td>分时系统和数据处理（标准的穿孔卡片）</td>
+<td>大批量的数据处理(KB/MB级别)</td>
+</tr>
+<tr>
+<td>1980年代</td>
+<td>个人电脑</td>
+<td>网格计算概念</td>
+</tr>
+<tr>
+<td>1990到2000年之间</td>
+<td>大规模系统</td>
+<td>P2P（点对点）系统</td>
+</tr>
+<tr>
+<td>现在</td>
+<td>大规模集群</td>
+<td>分时系统和海量数据处理</td>
+</tr>
+</tbody></table>
+<p><img src="/uploads/Cloud/2.png" alt=""></p>
+<h2 id="现代的云"><a href="#现代的云" class="headerlink" title="现代的云"></a>现代的云</h2><p>不同于前几代分布式计算系统，现代的云有四个主要特点</p>
+<ul>
+<li>超大规模<ul>
+<li>数据中心基本上都有数万、甚至数十万服务器构成，用户可以在任意多的服务器上运行计算程序</li>
+<li><img src="/uploads/Cloud/3.png" alt=""></li>
+</ul>
+</li>
+<li>按需访问: <code>*aaS</code>（即服务）<ul>
+<li>只为使用的服务付费</li>
+<li>HaaS，硬件即服务</li>
+<li>IaaS，架构即服务</li>
+<li>PaaS，平台即服务</li>
+<li>SaaS，软件即服务</li>
+</ul>
+</li>
+<li>数据密集性质<ul>
+<li>EB级的数据，比如日志、事件记录、网页数据</li>
+<li>大量的数据存储在数据中心</li>
+<li>需要附近的计算节点</li>
+<li>对于密集计算来说，<strong>关注点从计算转移到数据</strong>。CPU利用率(资源利用率)已经不再是最主要的度量，I/O才是(磁盘的I/O还有网络的I/O)</li>
+</ul>
+</li>
+<li>以及新的云计算程序模型<ul>
+<li>数据和序列的存储引擎，比如MapReduce/Hadoop</li>
+<li>键值对存储工具，比如Cassandra、MongoDB、NoSQL类型存储</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E4%BA%91%E8%AE%A1%E7%AE%97/" rel="tag"># 云计算</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/post/bb2a1286.html" rel="prev" title="Sensor">
+      <i class="fa fa-chevron-left"></i> Sensor
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/post/2a847a39.html" rel="next" title="MapReduce 范式">
+      MapReduce 范式 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#什么才是真正的云计算？"><span class="nav-number">1.</span> <span class="nav-text">什么才是真正的云计算？</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#目前主要有两种类型的云，-公有云服务或私有云服务。"><span class="nav-number">1.0.1.</span> <span class="nav-text">目前主要有两种类型的云， 公有云服务或私有云服务。</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#云计算可以同时节约时间和金钱成本。"><span class="nav-number">1.0.2.</span> <span class="nav-text">云计算可以同时节约时间和金钱成本。</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#什么是云"><span class="nav-number">1.1.</span> <span class="nav-text">什么是云</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#云计算的历史"><span class="nav-number">2.</span> <span class="nav-text">云计算的历史</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#现代的云"><span class="nav-number">3.</span> <span class="nav-text">现代的云</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">s09g</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">s09g</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

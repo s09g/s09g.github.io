@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+<script data-ad-client="ca-pub-4376471142277990" async
+  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"s09g.xyz","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Lanes Finding with Computer Vision利用计算机视觉进行道路检测，一般包括6部分：摄像头校正(camera calibration)、图像失真校正(distortion correction)、色彩&#x2F;梯度二值化(color&#x2F;gradient threshold)、视角转换 Perspective transform 、行道线检测(Detect lane lines)、">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Lanes Detection 道路检测">
+<meta property="og:url" content="http://s09g.xyz/post/5eea14bc.html">
+<meta property="og:site_name" content="s09g">
+<meta property="og:description" content="Lanes Finding with Computer Vision利用计算机视觉进行道路检测，一般包括6部分：摄像头校正(camera calibration)、图像失真校正(distortion correction)、色彩&#x2F;梯度二值化(color&#x2F;gradient threshold)、视角转换 Perspective transform 、行道线检测(Detect lane lines)、">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/1.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/2.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/3.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/4.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/5.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/6.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/7.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/8.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/9.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/10.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/11.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/12.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/13.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/14.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/15.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/16.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/17.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/18.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/19.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/20.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/21.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/22.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/23.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/24.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/25.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/26.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/27.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/28.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/29.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/31.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/32.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/33.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/34.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/35.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/36.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/37.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/38.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/39.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/40.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/41.jpeg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Lanes-Detection/42.jpeg">
+<meta property="article:published_time" content="2018-10-21T02:59:33.000Z">
+<meta property="article:modified_time" content="2020-05-05T03:28:02.452Z">
+<meta property="article:author" content="s09g">
+<meta property="article:tag" content="无人驾驶">
+<meta property="article:tag" content="机器学习">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://s09g.xyz/uploads/Lanes-Detection/1.jpeg">
+
+<link rel="canonical" href="http://s09g.xyz/post/5eea14bc.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Lanes Detection 道路检测 | s09g</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-166221552-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-166221552-1');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">s09g</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">10</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">1</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">47</span></a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://s09g.xyz/post/5eea14bc.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="s09g">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="s09g">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Lanes Detection 道路检测
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-10-20 19:59:33" itemprop="dateCreated datePublished" datetime="2018-10-20T19:59:33-07:00">2018-10-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-05-04 20:28:02" itemprop="dateModified" datetime="2020-05-04T20:28:02-07:00">2020-05-04</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Lanes-Finding-with-Computer-Vision"><a href="#Lanes-Finding-with-Computer-Vision" class="headerlink" title="Lanes Finding with Computer Vision"></a>Lanes Finding with Computer Vision</h1><p>利用计算机视觉进行道路检测，一般包括6部分：摄像头校正(camera calibration)、图像失真校正(distortion correction)、色彩/梯度二值化(color/gradient threshold)、视角转换 Perspective transform 、行道线检测(Detect lane lines)、 道路弯度测量(Determine the lane curvature)</p>
+<a id="more"></a>
+
+<h3 id="Calibration-校正"><a href="#Calibration-校正" class="headerlink" title="Calibration 校正"></a>Calibration 校正</h3><p>首先要对失真的程度进行测量，然后根据measurement的结果进行undistort</p>
+<p><img src="/uploads/Lanes-Detection/1.jpeg" alt=""></p>
+<p>这个东西叫做chessboard pattern, 用的时候从不同的角度拍这个chessboard，利用的是每个方块的corner去校正 (图像要记得转成灰度图)</p>
+<p><img src="/uploads/Lanes-Detection/2.jpeg" alt=""></p>
+<p>得到的结果其实只跟拍照的相机有关。对于每个的镜头，要单独做一遍这种校正。</p>
+<h3 id="Distorition-图像失真"><a href="#Distorition-图像失真" class="headerlink" title="Distorition 图像失真"></a>Distorition 图像失真</h3><p>理论上，只要不是针孔摄像机，基本都会存在图像失真的问题（透镜成像更快点，针孔相机这点上比不了）</p>
+<p><img src="/uploads/Lanes-Detection/3.jpeg" alt=""></p>
+<p>图像失真会影响到道路检测（将直线判断成曲线），车辆检测（用CNN检测的时候，识别出来的车比实际更大或者更小）</p>
+<p><img src="/uploads/Lanes-Detection/4.jpeg" alt=""></p>
+<p><img src="/uploads/Lanes-Detection/5.jpeg" alt=""></p>
+<p>由透镜引起的失真主要是两个: <br></p>
+<ul>
+<li><strong>径向畸变(Radial Distortion)</strong><br> 原因是光线穿过透镜的边缘时发生的偏转大于穿过中心发生的偏转</li>
+</ul>
+<p><img src="/uploads/Lanes-Detection/6.jpeg" alt=""></p>
+<ul>
+<li><strong>切线畸变(Tangential Distortion)</strong><br><br>原因是光线穿过透镜之后并没有垂直打在成像平面上</li>
+</ul>
+<p><img src="/uploads/Lanes-Detection/7.jpeg" alt=""></p>
+<h3 id="ROI-Region-of-Interest"><a href="#ROI-Region-of-Interest" class="headerlink" title="ROI (Region of Interest)"></a>ROI (Region of Interest)</h3><p>道路检测要先从摄像头视角获取道路信息，然后选取<strong>ROI(目标区域)</strong>, 包括选颜色和选区域。</p>
+<p>选颜色比较接近直觉, 路上的线也就两种颜色，要么白线，要么黄线。<br>白线其实比较好找</p>
+<p><img src="/uploads/Lanes-Detection/8.jpeg" alt="color selection"></p>
+<p>但是黄线的话就不能直接用原图了。要先把原图分成RGB三层</p>
+<p><img src="/uploads/Lanes-Detection/9.jpeg" alt="yellow line"></p>
+<p>而黄色的线在蓝色那层是看不到的 </p>
+<p><img src="/uploads/Lanes-Detection/10.jpeg" alt="RGB"></p>
+<p>（因为是互补色）</p>
+<p><img src="/uploads/Lanes-Detection/11.jpeg" alt="光的三原色"></p>
+<p>选区域是可以直接利用CV解决的问题。<br><br>从车头视角向前看，大部分像素都是没有用的。尤其是天空的部分。对于自动驾驶来说差不多等价于干扰信号，基本上可以直接过滤掉</p>
+<p><img src="/uploads/Lanes-Detection/12.jpeg" alt="车头视角"></p>
+<p><img src="/uploads/Lanes-Detection/13.jpeg" alt="区域选择"></p>
+<h3 id="Color-Space-色彩空间"><a href="#Color-Space-色彩空间" class="headerlink" title="Color Space 色彩空间"></a>Color Space 色彩空间</h3><p>在RGB色彩空间（以RGB建立三维空间）中，白色是由红绿蓝三种颜色的最大值组成的。</p>
+<p><img src="/uploads/Lanes-Detection/14.jpeg" alt=""></p>
+<p>因此想获得白线，可以通过设置RGB值的阈值</p>
+<p><img src="/uploads/Lanes-Detection/15.jpeg" alt=""></p>
+<p>但是这种情况下，会丢失黄线的信息。一般的处理方式是使用别的色彩空间，比如HSV, HLS, LUV…</p>
+<p><img src="/uploads/Lanes-Detection/16.jpeg" alt=""></p>
+<p>其中HSV（色相、饱和度、明度）和HLS（色相、亮度、饱和度）使用最多</p>
+<h3 id="HLS-hue-saturation-lightness"><a href="#HLS-hue-saturation-lightness" class="headerlink" title="HLS (hue, saturation, lightness)"></a>HLS (hue, saturation, lightness)</h3><p>也叫HSL，甚至叫HSL的还更多点。</p>
+<p><img src="/uploads/Lanes-Detection/17.jpeg" alt=""></p>
+<p>其实图像本身在光亮条件下变化最大，HS信道一般倒是不怎么变。所以我们把图像按照HSL拆分，在S信道下黄线非常明显</p>
+<p><img src="/uploads/Lanes-Detection/18.jpeg" alt=""></p>
+<h3 id="Canny-Edge-Detection"><a href="#Canny-Edge-Detection" class="headerlink" title="Canny Edge Detection"></a>Canny Edge Detection</h3><p>下一步是使用边缘检测算法寻找边线。如果我们把视图当成一张灰度图来看待，那么每一条边其实都在明暗块交替的位置</p>
+<p><img src="/uploads/Lanes-Detection/19.jpeg" alt=""></p>
+<p>通过计算亮度的变化，可以把原图转化成一张梯度图</p>
+<p><img src="/uploads/Lanes-Detection/20.jpeg" alt=""></p>
+<p>然后再将结果锐化，得到亮度数值变化最大的像素点</p>
+<p><img src="/uploads/Lanes-Detection/21.jpeg" alt=""></p>
+<p>实际上，在做Canny算法之前，要对图像做<strong>高斯平滑(Gaussian smoothing / Gaussian Blur)</strong> ，消除噪声和伪梯度点</p>
+<h4 id="题外话-Sobel-Operator-索伯算子"><a href="#题外话-Sobel-Operator-索伯算子" class="headerlink" title="(题外话) Sobel Operator 索伯算子"></a>(题外话) Sobel Operator 索伯算子</h4><p>首先，为什么卷积神经网络会有卷积(convolution)这种操作…<br><br>看完Sobel算子总算懂了，卷积这种运算讲究的是一个信号叠加。相比于Canny边缘检测，Sobel边缘检测其实更容易理解（然而还是Canny效果好）。</p>
+<h3 id="Hough-Transform-霍夫变化"><a href="#Hough-Transform-霍夫变化" class="headerlink" title="Hough Transform 霍夫变化"></a>Hough Transform 霍夫变化</h3><p>Hough Transform是图像变化中的经典算法，主要用来寻找图像中符合某种特征的集合，说白了就是检测直线、圆、椭圆。<br></p>
+<p><img src="/uploads/Lanes-Detection/22.jpeg" alt=""></p>
+<p>Hough变化要将笛卡尔坐标下的点变化到霍夫极坐标系，原来的点共线问题会由此转化计算成曲面在极坐标下的共点，效果上就是该算法对边缘间断不敏感。大致上是这个意思，实际操作的时候是统计累加空间里的局部最大值（峰值），以该峰值作为结果（所以说抗噪能力还是很强的）。</p>
+<p><img src="/uploads/Lanes-Detection/23.jpeg" alt=""></p>
+<p>总结一下就是：<br><br>原图 -&gt; 灰度图 -&gt; 边缘检测 -&gt; 直线检测 -&gt; 过滤掉斜率过低的直线 -&gt; 将最后结果叠加回原图</p>
+<p><img src="/uploads/Lanes-Detection/24.jpeg" alt="原图"></p>
+<p><img src="/uploads/Lanes-Detection/25.jpeg" alt="灰度图&amp;边缘检测"></p>
+<p><img src="/uploads/Lanes-Detection/26.jpeg" alt="最后结果叠加回原图"></p>
+<h3 id="Perspective-Transform"><a href="#Perspective-Transform" class="headerlink" title="Perspective Transform"></a>Perspective Transform</h3><p>由于Perspective的存在，2D图像存在近大远小的现象</p>
+<p><img src="/uploads/Lanes-Detection/27.jpeg" alt=""></p>
+<p>这样会导致原本平行的行道线，出现汇聚的趋势</p>
+<p><img src="/uploads/Lanes-Detection/28.jpeg" alt=""></p>
+<p>因此需要把视角转换成俯视</p>
+<p><img src="/uploads/Lanes-Detection/29.jpeg" alt=""></p>
+<p>将行道线还原到平行</p>
+<p><img src="/uploads/Lanes-Detection/31.jpeg" alt=""></p>
+<h3 id="Lane-Curvature"><a href="#Lane-Curvature" class="headerlink" title="Lane Curvature"></a>Lane Curvature</h3><p>解决道路弯曲(Lane Curvature)问题，实际上比较复杂。先要依次校正原图</p>
+<p><img src="/uploads/Lanes-Detection/32.jpeg" alt="lc"></p>
+<p>选取ROI</p>
+<p><img src="/uploads/Lanes-Detection/33.jpeg" alt=""></p>
+<p>然后要进行<strong>视角转换(Perspective Transform)</strong></p>
+<p><img src="/uploads/Lanes-Detection/34.jpeg" alt=""></p>
+<p>最后根据俯视图(Top-down view) 用二次函数拟合行道线</p>
+<p><img src="/uploads/Lanes-Detection/35.jpeg" alt=""></p>
+<h3 id="Sliding-windows-滑动窗口"><a href="#Sliding-windows-滑动窗口" class="headerlink" title="Sliding windows 滑动窗口"></a>Sliding windows 滑动窗口</h3><p>在检测弧线的过程中，首先在图像底部选取一小段，在垂直方向做直方图</p>
+<p><img src="/uploads/Lanes-Detection/36.jpeg" alt=""></p>
+<p>将顶点连接，变成峰值图</p>
+<p><img src="/uploads/Lanes-Detection/37.jpeg" alt=""></p>
+<p>出现峰值的地方是行道线的位置</p>
+<p><img src="/uploads/Lanes-Detection/38.jpeg" alt=""></p>
+<p>以此为起点，使用逐步向上移动，每次处理一小段图像</p>
+<p><img src="/uploads/Lanes-Detection/39.jpeg" alt=""></p>
+<p>这种检测模式叫做滑动窗口</p>
+<p><img src="/uploads/Lanes-Detection/40.jpeg" alt=""></p>
+<p>一旦拥有了第一帧的行道线位置，在随后的检测中可以利用边缘检测 + ROI 的方式获得之后的行道线</p>
+<p><img src="/uploads/Lanes-Detection/41.jpeg" alt=""></p>
+<p>得到道路的二次函数并没有用，从驾驶的角度来看，真正需要的是当前的转弯弧度。所以需要求出图片组的曲率半径(radius of curvature)，在对应计算出现实中的曲率半径</p>
+<p><img src="/uploads/Lanes-Detection/42.jpeg" alt=""></p>
+<hr>
+<p><em>此外还有一些小的细节，包括Offset, Sanity Check, Look-Ahead Filter, etc. 篇幅有限，不一一赘述</em></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%97%A0%E4%BA%BA%E9%A9%BE%E9%A9%B6/" rel="tag"># 无人驾驶</a>
+              <a href="/tags/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/" rel="tag"># 机器学习</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/post/4d594d97.html" rel="prev" title="Computer Architecture">
+      <i class="fa fa-chevron-left"></i> Computer Architecture
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/post/f5304d21.html" rel="next" title="Vehicle Detection 车辆检测">
+      Vehicle Detection 车辆检测 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Lanes-Finding-with-Computer-Vision"><span class="nav-number">1.</span> <span class="nav-text">Lanes Finding with Computer Vision</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Calibration-校正"><span class="nav-number">1.0.1.</span> <span class="nav-text">Calibration 校正</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Distorition-图像失真"><span class="nav-number">1.0.2.</span> <span class="nav-text">Distorition 图像失真</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ROI-Region-of-Interest"><span class="nav-number">1.0.3.</span> <span class="nav-text">ROI (Region of Interest)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Color-Space-色彩空间"><span class="nav-number">1.0.4.</span> <span class="nav-text">Color Space 色彩空间</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#HLS-hue-saturation-lightness"><span class="nav-number">1.0.5.</span> <span class="nav-text">HLS (hue, saturation, lightness)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Canny-Edge-Detection"><span class="nav-number">1.0.6.</span> <span class="nav-text">Canny Edge Detection</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#题外话-Sobel-Operator-索伯算子"><span class="nav-number">1.0.6.1.</span> <span class="nav-text">(题外话) Sobel Operator 索伯算子</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hough-Transform-霍夫变化"><span class="nav-number">1.0.7.</span> <span class="nav-text">Hough Transform 霍夫变化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Perspective-Transform"><span class="nav-number">1.0.8.</span> <span class="nav-text">Perspective Transform</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Lane-Curvature"><span class="nav-number">1.0.9.</span> <span class="nav-text">Lane Curvature</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Sliding-windows-滑动窗口"><span class="nav-number">1.0.10.</span> <span class="nav-text">Sliding windows 滑动窗口</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">s09g</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">s09g</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

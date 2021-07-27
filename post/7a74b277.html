@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+<script data-ad-client="ca-pub-4376471142277990" async
+  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"s09g.xyz","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="本文主要基于 Spring 5.0.6.RELEASE">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring IoC">
+<meta property="og:url" content="http://s09g.xyz/post/7a74b277.html">
+<meta property="og:site_name" content="s09g">
+<meta property="og:description" content="本文主要基于 Spring 5.0.6.RELEASE">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://s09g.xyz/uploads/Spring-IOC/1IOC.jpg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Spring-IOC/2%E7%BB%84%E4%BB%B6%E7%B1%BB%E5%9B%BE.jpg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Spring-IOC/3Resource%E7%B1%BB%E5%9B%BE.jpg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Spring-IOC/4ResourceLoader.jpg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Spring-IOC/5BeanFactory%E7%B1%BB%E5%9B%BE.jpg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Spring-IOC/6BeanDefinition%E7%B1%BB%E5%9B%BE.jpg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Spring-IOC/7BeanDefinitionReader%E7%B1%BB%E5%9B%BE.jpg">
+<meta property="og:image" content="http://s09g.xyz/uploads/Spring-IOC/8ApplicationContext%E7%B1%BB%E5%9B%BE.jpg">
+<meta property="article:published_time" content="2019-10-03T02:59:33.000Z">
+<meta property="article:modified_time" content="2020-05-05T03:30:50.905Z">
+<meta property="article:author" content="s09g">
+<meta property="article:tag" content="Spring">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://s09g.xyz/uploads/Spring-IOC/1IOC.jpg">
+
+<link rel="canonical" href="http://s09g.xyz/post/7a74b277.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Spring IoC | s09g</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-166221552-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-166221552-1');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">s09g</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">10</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">1</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">47</span></a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://s09g.xyz/post/7a74b277.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="s09g">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="s09g">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spring IoC
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-10-02 19:59:33" itemprop="dateCreated datePublished" datetime="2019-10-02T19:59:33-07:00">2019-10-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-05-04 20:30:50" itemprop="dateModified" datetime="2020-05-04T20:30:50-07:00">2020-05-04</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文主要基于 Spring 5.0.6.RELEASE</p>
+<a id="more"></a>
+
+
+<h2 id="1-IoC-理论"><a href="#1-IoC-理论" class="headerlink" title="1. IoC 理论"></a>1. IoC 理论</h2><p><code>IoC</code> 全称为 <code>Inversion of Control</code>，翻译为 “控制反转”，它还有一个别名为 <code>DI（Dependency Injection）</code>,即依赖注入。</p>
+<p>如何理解“控制反转”好呢？理解好它的关键在于我们需要回答如下四个问题：</p>
+<ol>
+<li>谁控制谁</li>
+<li>控制什么</li>
+<li>为何是反转</li>
+<li>哪些方面反转了</li>
+</ol>
+<p>在回答这四个问题之前，我们先看 IoC 的定义：</p>
+<blockquote>
+<p>所谓 IoC ，就是由 Spring IoC 容器来负责对象的生命周期和对象之间的关系</p>
+</blockquote>
+<p>上面这句话是整个 IoC 理论的核心。如何来理解这句话？我们引用一个例子来走阐述（看完该例子上面四个问题也就不是问题了）。</p>
+<p>找女朋友，一般情况下我们是如何来找女朋友的呢？首先我们需要根据自己的需求（漂亮、身材好、性格好）找一个妹子，然后到处打听她的兴趣爱好、微信、电话号码，然后各种投其所好送其所要，最后追到手。如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 年轻小伙子</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">YoungMan</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> BeautifulGirl beautifulGirl;</span><br><span class="line"></span><br><span class="line">    YoungMan()&#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 可能你比较牛逼，指腹为婚</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// beautifulGirl = new BeautifulGirl();</span></span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setBeautifulGirl</span><span class="params">(BeautifulGirl beautifulGirl)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">this</span>.beautifulGirl = beautifulGirl;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line"></span><br><span class="line">        YoungMan you = <span class="keyword">new</span> YoungMan();</span><br><span class="line"></span><br><span class="line">        BeautifulGirl beautifulGirl = <span class="keyword">new</span> BeautifulGirl(<span class="string">"你的各种条件"</span>);</span><br><span class="line"></span><br><span class="line">        beautifulGirl.setxxx(<span class="string">"各种投其所好"</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 然后你有女票了</span></span><br><span class="line"></span><br><span class="line">        you.setBeautifulGirl(beautifulGirl);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这就是我们通常做事的方式，如果我们需要某个对象，一般都是采用这种直接创建的方式(<code>new BeautifulGirl()</code>)，这个过程复杂而又繁琐，而且我们必须要面对每个环节，而且使用完成之后我们还要复杂销毁它，这种情况下我们的对象与它所依赖的对象耦合在一起。</p>
+<p>其实我们需要思考一个问题？我们每次用到自己依赖的对象真的需要自己去创建吗？我们知道，我们依赖对象其实并不是依赖该对象本身，而是依赖它所提供的服务，只要在我们需要它的时候，它能够及时提供服务即可，至于它是我们主动去创建的还是别人送给我们的，其实并不是那么重要。再说了，相比于自己千辛万苦去创建它还要管理善后而言，直接有人送过来是不是显得更加好呢？</p>
+<p>这个给我们送东西的“人” 就是 IoC，在上面的例子中，它就相当于一个婚介公司，作为一个婚介公司它管理着很多男男女女的资料，当我们需要一个女朋友的时候，直接跟婚介公司提出我们的需求，婚介公司则会根据我们的需求提供一个妹子给我们，我们只需要负责谈恋爱，生猴子就行了。你看，这样是不是很简单明了。</p>
+<p>诚然，作为婚介公司的 IoC 帮我们省略了找女朋友的繁杂过程，将原来的主动寻找变成了现在的被动接受，更加简洁轻便。你想啊，原来你还得鞍马前后，各种巴结，什么东西都需要自己去亲力亲为，现在好了，直接有人把现成的送过来，多么美妙的事情啊。所以，简单点说，IoC 的理念就是<strong>让别人为你服务</strong>，如下图（摘自Spring揭秘）：</p>
+<p><img src="/uploads/Spring-IOC/1IOC.jpg" alt="IOC"></p>
+<p>在没有引入 IoC 的时候，被注入的对象直接依赖于被依赖的对象，有了 IoC 后，两者及其他们的关系都是通过 Ioc Service Provider 来统一管理维护的。被注入的对象需要什么，直接跟 IoC Service Provider 打声招呼，后者就会把相应的被依赖对象注入到被注入的对象中，从而达到 IoC Service Provider 为被注入对象服务的目的。<strong>所以 IoC 就是这么简单！原来是需要什么东西自己去拿，现在是需要什么东西让别人（IoC Service Provider）送过来</strong></p>
+<p>现在在看上面那四个问题，答案就显得非常明显了:</p>
+<ol>
+<li><strong>谁控制谁</strong>：在传统的开发模式下，我们都是采用直接 new 一个对象的方式来创建对象，也就是说你依赖的对象直接由你自己控制，但是有了 IoC 容器后，则直接由 IoC 容器来控制。所以“谁控制谁”，当然是 IoC 容器控制对象</li>
+<li><strong>控制什么</strong>：控制对象。</li>
+<li><strong>为何是反转</strong>：没有 IoC 的时候我们都是在自己对象中主动去创建被依赖的对象，这是正转。但是有了 IoC 后，所依赖的对象直接由 IoC 容器创建后注入到被注入的对象中，依赖的对象由原来的主动获取变成被动接受，所以是反转。</li>
+<li><strong>哪些方面反转了</strong>：所依赖对象的获取被反转了。</li>
+</ol>
+<p>妹子有了，但是如何拥有妹子呢？这也是一门学问。</p>
+<ol>
+<li>可能你比较牛逼，刚刚出生的时候就指腹为婚了。</li>
+<li>大多数情况我们还是会考虑自己想要什么样的妹子，所以还是需要向婚介公司打招呼的。</li>
+<li>还有一种情况就是，你根本就不知道自己想要什么样的妹子，直接跟婚介公司说，我就要一个这样的妹子。</li>
+</ol>
+<h3 id="1-1-注入形式"><a href="#1-1-注入形式" class="headerlink" title="1.1 注入形式"></a>1.1 注入形式</h3><p>所以，IoC Service Provider 为被注入对象提供被依赖对象也有如下几种方式：构造方法注入、stter方法注入、接口注入。</p>
+<h4 id="①-构造器注入"><a href="#①-构造器注入" class="headerlink" title="① 构造器注入"></a>① 构造器注入</h4><p>构造器注入，顾名思义就是被注入的对象通过在其构造方法中声明依赖对象的参数列表，让外部知道它需要哪些依赖对象。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">YoungMan(BeautifulGirl beautifulGirl) &#123;</span><br><span class="line">    <span class="keyword">this</span>.beautifulGirl = beautifulGirl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>构造器注入方式比较直观，对象构造完毕后就可以直接使用，这就好比你出生你家里就给你指定了你媳妇。</p>
+<h4 id="②-setter-方法注入"><a href="#②-setter-方法注入" class="headerlink" title="② setter 方法注入"></a>② setter 方法注入</h4><p>对于 JavaBean 对象而言，我们一般都是通过 getter 和 setter 方法来访问和设置对象的属性。所以，当前对象只需要为其所依赖的对象提供相对应的 setter 方法，就可以通过该方法将相应的依赖对象设置到被注入对象中。如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">YoungMan</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> BeautifulGirl beautifulGirl;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setBeautifulGirl</span><span class="params">(BeautifulGirl beautifulGirl)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.beautifulGirl = beautifulGirl;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>相比于构造器注入，setter 方式注入会显得比较宽松灵活些，它可以在任何时候进行注入（当然是在使用依赖对象之前），这就好比你可以先把自己想要的妹子想好了，然后再跟婚介公司打招呼，你可以要林志玲款式的，赵丽颖款式的，甚至凤姐哪款的，随意性较强。</p>
+<h4 id="③-接口方式注入"><a href="#③-接口方式注入" class="headerlink" title="③ 接口方式注入"></a>③ 接口方式注入</h4><p>接口方式注入显得比较霸道，因为它需要被依赖的对象实现不必要的接口，带有侵入性。一般都不推荐这种方式。</p>
+<p>感兴趣的胖友，可以看看 <a href="http://wiki.jikexueyuan.com/project/spring-ioc/iocordi-1.html#6e5dfcd838f3a79e9129641785cf736f" target="_blank" rel="noopener">《依赖注入的三种实现形式 —— 接口注入（Interface Injection）》</a></p>
+<h3 id="1-2-推荐文章"><a href="#1-2-推荐文章" class="headerlink" title="1.2 推荐文章"></a>1.2 推荐文章</h3><p>关于 IoC 理论部分，这里推荐几篇博客阅读：</p>
+<ul>
+<li><a href="http://www.cnblogs.com/xdp-gacl/p/4249939.html" target="_blank" rel="noopener">《谈谈对 Spring IoC 的理解》</a></li>
+<li><a href="https://blog.csdn.net/m13666368773/article/details/7802126" target="_blank" rel="noopener">《Spring 的 IoC 原理[通俗解释一下]》</a></li>
+<li><a href="https://blog.csdn.net/it_man/article/details/4402245" target="_blank" rel="noopener">《Spring IoC 原理（看完后大家可以自己写一个spring）》</a></li>
+</ul>
+<h2 id="2-各个组件"><a href="#2-各个组件" class="headerlink" title="2. 各个组件"></a>2. 各个组件</h2><p>先看下图（摘自:<a href="http://singleant.iteye.com/blog/1177358）" target="_blank" rel="noopener">http://singleant.iteye.com/blog/1177358）</a></p>
+<p><img src="/uploads/Spring-IOC/2%E7%BB%84%E4%BB%B6%E7%B1%BB%E5%9B%BE.jpg" alt="组件类图"></p>
+<p>该图为 ClassPathXmlApplicationContext 的类继承体系结构，虽然只有一部分，但是它基本上包含了 IoC 体系中大部分的核心类和接口。</p>
+<p>下面我们就针对这个图进行简单的拆分和补充说明。</p>
+<h3 id="2-1-Resource-体系"><a href="#2-1-Resource-体系" class="headerlink" title="2.1 Resource 体系"></a>2.1 Resource 体系</h3><p><code>org.springframework.core.io.Resource</code>，对资源的抽象。它的每一个实现类都代表了一种资源的访问策略，如 ClassPathResource、RLResource、FileSystemResource 等。</p>
+<p><img src="/uploads/Spring-IOC/3Resource%E7%B1%BB%E5%9B%BE.jpg" alt="Resource 类图"></p>
+<h4 id="2-1-2-ResourceLoader-体系"><a href="#2-1-2-ResourceLoader-体系" class="headerlink" title="2.1.2 ResourceLoader 体系"></a>2.1.2 ResourceLoader 体系</h4><p>有了资源，就应该有资源加载，Spring 利用 <code>org.springframework.core.io.ResourceLoader</code> 来进行统一资源加载，类图如下：</p>
+<p><img src="/uploads/Spring-IOC/4ResourceLoader.jpg" alt="ResourceLoader 类图"></p>
+<h3 id="2-2-BeanFactory-体系"><a href="#2-2-BeanFactory-体系" class="headerlink" title="2.2 BeanFactory 体系"></a>2.2 BeanFactory 体系</h3><p><code>org.springframework.beans.factory.BeanFactory</code>，是一个非常纯粹的 bean 容器，它是 IoC 必备的数据结构，其中 BeanDefinition 是它的基本结构。BeanFactory 内部维护着一个BeanDefinition map ，并可根据 BeanDefinition 的描述进行 bean 的创建和管理。</p>
+<p><img src="/uploads/Spring-IOC/5BeanFactory%E7%B1%BB%E5%9B%BE.jpg" alt="BeanFactory 类图"></p>
+<ul>
+<li>BeanFactory 有三个直接子类 ListableBeanFactory、HierarchicalBeanFactory 和 AutowireCapableBeanFactory 。</li>
+<li>DefaultListableBeanFactory 为最终默认实现，它实现了所有接口。</li>
+</ul>
+<h3 id="2-3-BeanDefinition-体系"><a href="#2-3-BeanDefinition-体系" class="headerlink" title="2.3 BeanDefinition 体系"></a>2.3 BeanDefinition 体系</h3><p><code>org.springframework.beans.factory.config.BeanDefinition</code> ，用来描述 Spring 中的 Bean 对象。</p>
+<p><img src="/uploads/Spring-IOC/6BeanDefinition%E7%B1%BB%E5%9B%BE.jpg" alt="BeanDefinition 类图"></p>
+<h3 id="2-4-BeanDefinitionReader-体系"><a href="#2-4-BeanDefinitionReader-体系" class="headerlink" title="2.4 BeanDefinitionReader 体系"></a>2.4 BeanDefinitionReader 体系</h3><p><code>org.springframework.beans.factory.support.BeanDefinitionReader</code> 的作用是读取 Spring 的配置文件的内容，并将其转换成 Ioc 容器内部的数据结构 ：BeanDefinition 。</p>
+<p><img src="/uploads/Spring-IOC/7BeanDefinitionReader%E7%B1%BB%E5%9B%BE.jpg" alt="BeanDefinitionReader 类图"></p>
+<h3 id="2-5-ApplicationContext-体系"><a href="#2-5-ApplicationContext-体系" class="headerlink" title="2.5 ApplicationContext 体系"></a>2.5 ApplicationContext 体系</h3><p><code>org.springframework.context.ApplicationContext</code> ，这个就是大名鼎鼎的 Spring 容器，它叫做应用上下文，与我们应用息息相关。它继承 BeanFactory ，所以它是 BeanFactory 的扩展升级版，如果BeanFactory 是屌丝的话，那么 ApplicationContext 则是名副其实的高富帅。由于 ApplicationContext 的结构就决定了它与 BeanFactory 的不同，其主要区别有：</p>
+<ol>
+<li>继承 <code>org.springframework.context.MessageSource</code> 接口，提供国际化的标准访问策略。</li>
+<li>继承 <code>org.springframework.context.ApplicationEventPublisher</code> 接口，提供强大的事件机制。</li>
+<li>扩展 ResourceLoader ，可以用来加载多种 Resource ，可以灵活访问不同的资源。</li>
+<li>对 Web 应用的支持。</li>
+</ol>
+<p>下图来源：<a href="https://blog.csdn.net/yujin753/article/details/47043143" target="_blank" rel="noopener">https://blog.csdn.net/yujin753/article/details/47043143</a></p>
+<p><img src="/uploads/Spring-IOC/8ApplicationContext%E7%B1%BB%E5%9B%BE.jpg" alt="ApplicationContext 类图"></p>
+<h3 id="2-6-小结"><a href="#2-6-小结" class="headerlink" title="2.6 小结"></a>2.6 小结</h3><p>通过上面五个体系，我们可以看出，IoC 主要由 <code>spring-beans</code> 和 <code>spring-context</code> 项目，进行实现。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Spring/" rel="tag"># Spring</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/post/d7ddeb4c.html" rel="prev" title="数据与控制分离">
+      <i class="fa fa-chevron-left"></i> 数据与控制分离
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/post/ceaf7b2a.html" rel="next" title="Spring 统一资源加载策略">
+      Spring 统一资源加载策略 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-IoC-理论"><span class="nav-number">1.</span> <span class="nav-text">1. IoC 理论</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-注入形式"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 注入形式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#①-构造器注入"><span class="nav-number">1.1.1.</span> <span class="nav-text">① 构造器注入</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#②-setter-方法注入"><span class="nav-number">1.1.2.</span> <span class="nav-text">② setter 方法注入</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#③-接口方式注入"><span class="nav-number">1.1.3.</span> <span class="nav-text">③ 接口方式注入</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-推荐文章"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 推荐文章</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-各个组件"><span class="nav-number">2.</span> <span class="nav-text">2. 各个组件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-Resource-体系"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 Resource 体系</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-2-ResourceLoader-体系"><span class="nav-number">2.1.1.</span> <span class="nav-text">2.1.2 ResourceLoader 体系</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-BeanFactory-体系"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 BeanFactory 体系</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-BeanDefinition-体系"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 BeanDefinition 体系</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-BeanDefinitionReader-体系"><span class="nav-number">2.4.</span> <span class="nav-text">2.4 BeanDefinitionReader 体系</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-5-ApplicationContext-体系"><span class="nav-number">2.5.</span> <span class="nav-text">2.5 ApplicationContext 体系</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-6-小结"><span class="nav-number">2.6.</span> <span class="nav-text">2.6 小结</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">s09g</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">s09g</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

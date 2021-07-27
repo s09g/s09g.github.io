@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+<script data-ad-client="ca-pub-4376471142277990" async
+  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"s09g.xyz","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="数据探索 思路：数据探索，做一点点的修改–&gt;数据清洗(空值的填充)–&gt;数据预处理（数据的归一化，标准化等）–&gt;模型构建–&gt;训练预测–&gt;保存提交  123import pandas as pdtrain &#x3D; pd.read_csv(&quot;.&#x2F;train.csv&quot;)train.head()">
+<meta property="og:type" content="article">
+<meta property="og:title" content="构建baseline">
+<meta property="og:url" content="http://s09g.xyz/post/c598b05f.html">
+<meta property="og:site_name" content="s09g">
+<meta property="og:description" content="数据探索 思路：数据探索，做一点点的修改–&gt;数据清洗(空值的填充)–&gt;数据预处理（数据的归一化，标准化等）–&gt;模型构建–&gt;训练预测–&gt;保存提交  123import pandas as pdtrain &#x3D; pd.read_csv(&quot;.&#x2F;train.csv&quot;)train.head()">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://github.com/s09g/notes/raw/master/kaggle/2.%E6%9E%84%E5%BB%BAbaseline/assets/1.png">
+<meta property="og:image" content="https://github.com/s09g/notes/raw/master/kaggle/2.%E6%9E%84%E5%BB%BAbaseline/assets/2.png">
+<meta property="og:image" content="https://github.com/s09g/notes/raw/master/kaggle/2.%E6%9E%84%E5%BB%BAbaseline/assets/3.png">
+<meta property="og:image" content="https://github.com/s09g/notes/raw/master/kaggle/2.%E6%9E%84%E5%BB%BAbaseline/assets/4.png">
+<meta property="article:published_time" content="2019-09-19T02:59:33.000Z">
+<meta property="article:modified_time" content="2020-05-05T03:29:14.253Z">
+<meta property="article:author" content="s09g">
+<meta property="article:tag" content="Kaggle">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://github.com/s09g/notes/raw/master/kaggle/2.%E6%9E%84%E5%BB%BAbaseline/assets/1.png">
+
+<link rel="canonical" href="http://s09g.xyz/post/c598b05f.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>构建baseline | s09g</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-166221552-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-166221552-1');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">s09g</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">10</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">1</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">47</span></a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://s09g.xyz/post/c598b05f.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="s09g">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="s09g">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          构建baseline
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-09-18 19:59:33" itemprop="dateCreated datePublished" datetime="2019-09-18T19:59:33-07:00">2019-09-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-05-04 20:29:14" itemprop="dateModified" datetime="2020-05-04T20:29:14-07:00">2020-05-04</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="数据探索"><a href="#数据探索" class="headerlink" title="数据探索"></a>数据探索</h2><blockquote>
+<p>思路：数据探索，做一点点的修改–&gt;数据清洗(空值的填充)–&gt;数据预处理（数据的归一化，标准化等）–&gt;模型构建–&gt;训练预测–&gt;保存提交</p>
+</blockquote>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line">train = pd.read_csv(<span class="string">"./train.csv"</span>)</span><br><span class="line">train.head()</span><br></pre></td></tr></table></figure>
+
+
+<a id="more"></a>
+
+
+<p>使用<strong>pandas_profiling</strong>完成<strong>EDA<code>(explore data analysis)</code></strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> pandas_profiling <span class="keyword">as</span> ppf</span><br><span class="line">ppf.ProfileReport(train)</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://github.com/s09g/notes/raw/master/kaggle/2.%E6%9E%84%E5%BB%BAbaseline/assets/1.png" alt=""></p>
+<p><img src="https://github.com/s09g/notes/raw/master/kaggle/2.%E6%9E%84%E5%BB%BAbaseline/assets/2.png" alt=""></p>
+<p>使用<strong>箱型图</strong>查看<strong>异常值</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">plt.figure(figsize=(<span class="number">15</span>,<span class="number">8</span>))</span><br><span class="line">sns.boxplot(train.YearBuilt, train.SalePrice)</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://github.com/s09g/notes/raw/master/kaggle/2.%E6%9E%84%E5%BB%BAbaseline/assets/3.png" alt=""></p>
+<p>使用<strong>散点图</strong>用于观察是否存在<strong>线性关系</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">plt.figure(figsize=(<span class="number">12</span>,<span class="number">6</span>))</span><br><span class="line">plt.scatter(x=train.GrLivArea, y=train.SalePrice)</span><br><span class="line">plt.xlabel(<span class="string">"GrLivArea"</span>, fontsize=<span class="number">13</span>)</span><br><span class="line">plt.ylabel(<span class="string">"SalePrice"</span>, fontsize=<span class="number">13</span>)</span><br><span class="line"><span class="comment"># plt.ylim(0,800000)</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://github.com/s09g/notes/raw/master/kaggle/2.%E6%9E%84%E5%BB%BAbaseline/assets/4.png" alt=""></p>
+<p>删除图中右下角有两个异常点</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">outlier = train[(train.GrLivArea &gt; <span class="number">4000</span>) &amp; (train.SalePrice &lt; <span class="number">300000</span>)]</span><br><span class="line">train.drop(outlier.index, inplace=<span class="literal">True</span>)</span><br></pre></td></tr></table></figure>
+
+<h2 id="数据清洗"><a href="#数据清洗" class="headerlink" title="数据清洗"></a>数据清洗</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">miss = full.isnull().sum()<span class="comment">#统计出空值的个数</span></span><br><span class="line">miss[miss &gt; <span class="number">0</span>].sort_values()</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><strong>缺失值/空值</strong>的填充与删除<ul>
+<li>对于字符<ul>
+<li>用<code>None</code>填充</li>
+</ul>
+</li>
+<li>数值：<ul>
+<li>均值填充</li>
+<li>众数填充 <code>full[&quot;MSZoning&quot;].mode()[0]</code></li>
+</ul>
+</li>
+<li><em>如何选择处理方式，选均值or众数？正确的方法应该都试一下，然后根据validation结果进行选择</em></li>
+</ul>
+</li>
+<li>数据预处理:字符变成数值型，归一化，标准化…<ul>
+<li>使用<code>StandardScaler</code>、<code>Normalizer</code>、<code>MinMaxScaler</code>、<code>LabelBinarizer</code>、<code>LabelEncoder</code>、<code>OneHotEncoder</code>和<code>get_dummies</code>等<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> sklearn.preprocessing <span class="keyword">import</span> LabelEncoder</span><br><span class="line">pd.get_dummies(full)<span class="comment">##独热编码</span></span><br></pre></td></tr></table></figure></li>
+<li><em>我一般用<code>sklearn</code>的<code>LabelEncoder</code>和<code>OneHotEncoder</code>, <code>pd.get_dummies</code>还是倒是头一次遇上</em></li>
+</ul>
+</li>
+</ol>
+<p>3.异常值的处理</p>
+<ul>
+<li>箱型图</li>
+<li>散点图</li>
+</ul>
+<p>4.模型的构建</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> sklearn.linear_model <span class="keyword">import</span> LinearRegression<span class="comment">#导入模型</span></span><br></pre></td></tr></table></figure>
+
+<p>5.模型训练好了后就对test进行预测 &amp; 提交结果</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">result.to_csv(<span class="string">"baseline.csv"</span>,index=<span class="literal">False</span></span><br></pre></td></tr></table></figure>
+
+<p>直接使用<code>sklearn</code>的<code>LinearRegression</code>作为<code>baseline</code>, 排名应该在3k之后。所以接下来要开始做特征工程</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Kaggle/" rel="tag"># Kaggle</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/post/da1143dd.html" rel="prev" title="Kaggle 准备">
+      <i class="fa fa-chevron-left"></i> Kaggle 准备
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/post/75195969.html" rel="next" title="Feature preprocessing">
+      Feature preprocessing <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#数据探索"><span class="nav-number">1.</span> <span class="nav-text">数据探索</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据清洗"><span class="nav-number">2.</span> <span class="nav-text">数据清洗</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">s09g</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">s09g</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

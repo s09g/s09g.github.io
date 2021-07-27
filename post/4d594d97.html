@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+<script data-ad-client="ca-pub-4376471142277990" async
+  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"s09g.xyz","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="计算机：软件（应用软件+系统软件）+硬件 计算机系统抽象：在更高层次上思考，更少的思考低级实体 计算机体系结构程序员所见到的计算机系统的属性，概念性的结构与功能特性（指令系统、数据类型、寻址技术、I&#x2F;O机理）e.g.有无乘法指令，数据长度是多长 计算机组成实现计算机体系结构所体现的属性（具体指令的实现）e.g.如何实现乘法指令（逻辑实现）">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Computer Architecture">
+<meta property="og:url" content="http://s09g.xyz/post/4d594d97.html">
+<meta property="og:site_name" content="s09g">
+<meta property="og:description" content="计算机：软件（应用软件+系统软件）+硬件 计算机系统抽象：在更高层次上思考，更少的思考低级实体 计算机体系结构程序员所见到的计算机系统的属性，概念性的结构与功能特性（指令系统、数据类型、寻址技术、I&#x2F;O机理）e.g.有无乘法指令，数据长度是多长 计算机组成实现计算机体系结构所体现的属性（具体指令的实现）e.g.如何实现乘法指令（逻辑实现）">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2014-12-31T03:59:33.000Z">
+<meta property="article:modified_time" content="2020-05-13T23:11:42.503Z">
+<meta property="article:author" content="s09g">
+<meta property="article:tag" content="Computer Architecture">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://s09g.xyz/post/4d594d97.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Computer Architecture | s09g</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-166221552-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-166221552-1');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">s09g</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">10</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">1</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">47</span></a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://s09g.xyz/post/4d594d97.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="s09g">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="s09g">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Computer Architecture
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2014-12-30 19:59:33" itemprop="dateCreated datePublished" datetime="2014-12-30T19:59:33-08:00">2014-12-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-05-13 16:11:42" itemprop="dateModified" datetime="2020-05-13T16:11:42-07:00">2020-05-13</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>计算机：软件（应用软件+系统软件）+硬件</p>
+<p>计算机系统<br>抽象：在更高层次上思考，更少的思考低级实体</p>
+<p>计算机体系结构<br>程序员所见到的计算机系统的属性，概念性的结构与功能特性（指令系统、数据类型、寻址技术、I/O机理）<br>e.g.有无乘法指令，数据长度是多长</p>
+<p>计算机组成<br>实现计算机体系结构所体现的属性（具体指令的实现）<br>e.g.如何实现乘法指令（逻辑实现）</p>
+<a id="more"></a>
+
+<hr>
+<h2 id="Chapter-1-计算机基本结构"><a href="#Chapter-1-计算机基本结构" class="headerlink" title="Chapter 1 计算机基本结构"></a>Chapter 1 计算机基本结构</h2><p>计算机执行一条指令的步骤：</p>
+<ul>
+<li>取指 Fetch</li>
+<li>译码 Decode</li>
+<li>执行 Execute</li>
+<li>回写 Write-back</li>
+</ul>
+<hr>
+<h2 id="Chapter-2-指令系统体系结构"><a href="#Chapter-2-指令系统体系结构" class="headerlink" title="Chapter 2 指令系统体系结构"></a>Chapter 2 指令系统体系结构</h2><p>一个简单地计算机指令系统</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">运算类指令</span><br><span class="line">     ADD R,M</span><br><span class="line">传送类指令</span><br><span class="line">     LOAD R,M</span><br><span class="line">     STORE M,R</span><br><span class="line">转移类指令</span><br><span class="line">     JMP L</span><br><span class="line">控制类指令</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>8086通用寄存器：</p>
+<ul>
+<li>数据寄存器x4</li>
+<li>标志寄存器</li>
+<li>指令指针寄存器</li>
+<li>段寄存器x4（物理地址 = 段基址x16+偏移量）</li>
+</ul>
+</blockquote>
+<br>
+
+<blockquote>
+<p>x86指令简介     CISC</p>
+<ul>
+<li>传送类指令：把数据或地址传送到寄存器或存储器单元中<ul>
+<li>MOV DST,SRC</li>
+</ul>
+</li>
+<li>运算类指令<ul>
+<li>算术运算指令：完成算术运算，提供运算结果调整、符号扩展等功能<ul>
+<li>ADD DST,SRC</li>
+<li>INC OPR</li>
+<li>ADC DST,SRC     (带进位的加法)</li>
+</ul>
+</li>
+<li>逻辑运算和位移指令：实现对二进制位的操作和控制，又称“位操作指令”</li>
+</ul>
+</li>
+<li>转移类指令：改变指令的执行顺序</li>
+<li>控制类指令：控制CPU功能，对标志位进行操作</li>
+</ul>
+</blockquote>
+<hr>
+<blockquote>
+<p>MIPS体系结构     RISC</p>
+<ul>
+<li>固定的指令长度（32-bit）（32个通用寄存器（32-bit））</li>
+<li>简单的寻址模式</li>
+<li>指令数量少、功能简单</li>
+<li>只有Load和Store可以访问存储器</li>
+<li>需要优秀的编译器支持</li>
+</ul>
+</blockquote>
+<p>MIPS指令简介<br>基本格式：分三类 R型 I型 J型<br>R：register 寄存器          6个域<br>I：immediate 立即数      4个域<br>J：jump 无条件转移       6个域</p>
+<hr>
+<h2 id="Chapter-3-算数逻辑单元"><a href="#Chapter-3-算数逻辑单元" class="headerlink" title="Chapter 3 算数逻辑单元"></a>Chapter 3 算数逻辑单元</h2><h3 id="算术运算指令"><a href="#算术运算指令" class="headerlink" title="算术运算指令"></a>算术运算指令</h3><p>R型</p>
+<figure class="highlight mips"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">add </span>rd,rs,rt</span><br><span class="line"><span class="keyword">addu </span>rd,rs,rt     <span class="comment">#汇报溢出的加法</span></span><br><span class="line"><span class="keyword">sub </span>rd,rs,rt</span><br><span class="line"><span class="keyword">subu </span>rd,rs,rt     <span class="comment">#汇报溢出的减法</span></span><br></pre></td></tr></table></figure>
+<p>I型</p>
+<figure class="highlight mips"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">addi </span>rt,rs,imm     <span class="comment">#对立即数进行 符号扩展(扩展用最高位补齐) SignExtImm=&#123;16&#123;imm[15]&#125;,imm&#125;</span></span><br><span class="line"><span class="keyword">addiu </span>rt,rs,imm     <span class="comment">#汇报溢出的addi</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="逻辑运算指令"><a href="#逻辑运算指令" class="headerlink" title="逻辑运算指令"></a>逻辑运算指令</h3><p>R型</p>
+<figure class="highlight mips"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">and </span>rd,rs,rt</span><br><span class="line"><span class="keyword">or </span>rd,rs,rt</span><br><span class="line"><span class="keyword">nor </span>rd,rs,rt</span><br></pre></td></tr></table></figure>
+<p>I型</p>
+<figure class="highlight mips"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">andi </span>rt,rs,imm     <span class="comment">#对立即数进行 零扩展(扩展位用0补齐) ZeroExtImm=&#123;16&#123;1’b0&#125;,imm&#125;</span></span><br><span class="line"><span class="keyword">ori </span>rt,rs,imm</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>门电路     由CMOS实现<br>寄存器     由D触发器(DFF)实现<br>ALU：<br>逻辑运算     多路选择器(MUX)<br>加法和减法运算     半加器(Half Adder)构成全加器(Full Adder)</p>
+</blockquote>
+<p>有 溢出 不一定有 进位<br>有 进位 不一定有 溢出<br>溢出的判断：最高位的进位输入 不等于 最高位的进位输出</p>
+<p>加法器的优化<br>全加器，行波进位加法器(RCA)<br>改进为：超前进位加法器(CLA)</p>
+<hr>
+<h2 id="Chapter-4-乘法器和除法器"><a href="#Chapter-4-乘法器和除法器" class="headerlink" title="Chapter 4 乘法器和除法器"></a>Chapter 4 乘法器和除法器</h2><p>优化：性能优化 (减少时钟周期)+ 面积优化(减少寄存器数量)</p>
+<hr>
+<h2 id="Chapter-5-单周期处理器"><a href="#Chapter-5-单周期处理器" class="headerlink" title="Chapter 5 单周期处理器"></a>Chapter 5 单周期处理器</h2><p>指令系统的需求：</p>
+<ul>
+<li>算术逻辑单元(ALU)</li>
+<li>立即数扩展部件</li>
+<li>程序计数器</li>
+<li>寄存器堆</li>
+<li>存储器</li>
+</ul>
+<p>处理器控制信号——详见书本（难度太高）</p>
+<hr>
+<h2 id="Chapter-6-流水线处理器"><a href="#Chapter-6-流水线处理器" class="headerlink" title="Chapter 6 流水线处理器"></a>Chapter 6 流水线处理器</h2><p>流水线不会缩短单条指令的执行时间，而是提高指令的 <strong>吞吐率</strong></p>
+<blockquote>
+<p>超级流水线：     #加深流水线</p>
+<ul>
+<li>将五级流水线细分为更多的阶段，增加流水线的深度</li>
+<li>提升时钟频率，从而提高指令吞吐率</li>
+<li>好处：提升了时钟频率；坏处：延迟所占比例增加</li>
+</ul>
+</blockquote>
+<br>
+
+<blockquote>
+<p>超标量流水线：     #拓宽流水线</p>
+<ul>
+<li>通常，具有两条或两条以上并行工作的流水线结构 称为 超标量结构</li>
+<li>使用超标量结构的处理器称为 超标量处理器</li>
+</ul>
+</blockquote>
+<p><strong>冒险</strong>：阻止下一条指令在下一个时钟周期开始执行的情况</p>
+<ol>
+<li><p>结构冒险：所需的硬件部件正在为之前的指令工作</p>
+<ul>
+<li>如果指令和数据放在同一个存储器中，则不能同时读存储器<ul>
+<li>解决方案1：流水线停顿(stall)，产生空泡(bubble)</li>
+<li>解决方案2：指令和数据放在不同的存储器中</li>
+</ul>
+</li>
+<li>如果读寄存器和写寄存器同时发生，如何处理<ul>
+<li>解决方案：前半个时钟周期写，后半个时钟周期读，并且设置独立的读写口</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>数据冒险：需要等待之前的指令完成数据的读写</p>
+<ul>
+<li>一条指令需要使用之前指令的运算结果，但是结果还没有写回<ul>
+<li>解决方案1：流水线停顿(stall)，产生空泡(bubble)</li>
+<li>解决方案2：数据前递(Forwarding)/也叫 旁路(Bypass)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>控制冒险：需要根据之前指令的结果决定下一步的行为</p>
+<ul>
+<li>尚未确定是否发生分支，如何进行下一次取值<ul>
+<li>解决方案1：流水线停顿(stall)，产生空泡(bubble)</li>
+<li>解决方案2：延迟转移技术</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="Chapter-7-存储层次结构"><a href="#Chapter-7-存储层次结构" class="headerlink" title="Chapter 7 存储层次结构"></a>Chapter 7 存储层次结构</h2><p>DRAM、SRAM、DDR 工作原理与各项数据 <em>完全是底层细节，具体看书</em></p>
+<p>程序的局部性原理：计算机程序从时间和空间都表现出“局部性”</p>
+<ul>
+<li>时间局部性(Temporal Locality)：最近被访问的存储器单元(指令或数据)很快还会被访问</li>
+<li>空间局部性(Spatial Locality)：正在被访问的存储器单元附近的单元很快会被访问</li>
+</ul>
+<p><em>Cache的基本原理：利用时间局部性和空间局部性</em></p>
+<p><strong>Cache失效原因：</strong></p>
+<ul>
+<li>义务失效(Compulsory Miss):第一次访问某一数据块；也称为冷启失效(Cold Start Miss)</li>
+<li>容量失效(Capacity Miss):Cache无法保存程序访问所需的所有数据块</li>
+<li>冲突失效(Conflict Miss):多个存储器位置映射到同一Cache位置</li>
+</ul>
+<p>Cache的映射策略：</p>
+<ul>
+<li>直接映射</li>
+<li>二路组相联</li>
+<li>多路组相联</li>
+<li>全相联</li>
+</ul>
+<p><strong>常见的Cache替换算法：</strong></p>
+<ul>
+<li>随机(Random):硬件随机选择一个Cache块替换</li>
+<li>轮转(Round-Robin):按照预先设定的顺序依次选择Cache块替换</li>
+<li>最近最少使用(LRU):硬件记录访问历史信息；选择距离现在最长时间未被访问的Cache块替换</li>
+</ul>
+<hr>
+<h2 id="Chapter-8-中断和异常-（重点）"><a href="#Chapter-8-中断和异常-（重点）" class="headerlink" title="Chapter 8 中断和异常 （重点）"></a>Chapter 8 中断和异常 （重点）</h2><p><strong>中断向量(interrupt vector)</strong></p>
+<ul>
+<li>中断向量：中断服务程序的入口地址</li>
+<li>每个中断类型对应一个中断向量</li>
+</ul>
+<p>逻辑地址生成物理地址——段加偏移：物理地址 = 段基址*16 + 偏移量</p>
+<blockquote>
+<p>中断处理过程：</p>
+<ul>
+<li>关中断：CPU关闭中断响应，即不再接受其它外部中断请求</li>
+<li>保存断点：将发生中断处的指令地址压入栈，以使中断处理完后能正确地返回</li>
+<li>识别中断源：CPU识别中断的来源，确定中断类型，从而找到相应的中断服务程序的入口地址</li>
+<li>保存现场：将发生中断处的有关寄存器(中断服务程序中要使用的寄存器)以及标志寄存器的内容压入栈</li>
+<li>执行中断服务程序：转到中断服务程序入口开始执行，可适当时刻重新开放中断，以便允许响应较高优先级的外部中断</li>
+<li>恢复现场并返回：把“保存现场”时压入栈的信息弹回原寄存器，然后执行中断返回指令，从而返回主程序继续运行</li>
+</ul>
+</blockquote>
+<hr>
+<h2 id="Chapter-9-输入输出设备"><a href="#Chapter-9-输入输出设备" class="headerlink" title="Chapter 9 输入输出设备"></a>Chapter 9 输入输出设备</h2><p><strong>I/O端口</strong></p>
+<ul>
+<li>I/O接口内部包含一组称为 I/O端口 的 寄存器</li>
+<li>每个I/O端口都需要有自己的 端口地址 （或称端口号），以便CPU访问</li>
+</ul>
+<p>常见的I/O端口编址方式<br>1.I/O端口和存储器分开编址：</p>
+<ul>
+<li>I/O映像的I/O方式， I/O Mapped I/O</li>
+<li>x86体系结构采用该方式</li>
+</ul>
+<p>2.I/O端口和存储器统一编制：</p>
+<ul>
+<li>存储器映像的I/O方式，Memory Mapped I/O</li>
+<li>ARM、MIPS、PowerPC等体系结构采用该方式</li>
+</ul>
+<br>
+*I/O控制方式的分类*
+1.程序控制方式：包括如下两种
+(1).无条件传送方式：
+
+<ul>
+<li>假定外设已经准备好</li>
+<li>CPU直接使用指令与外设传送数据</li>
+<li>不查询外设的工作状态</li>
+</ul>
+<p>(2).程序查询传送方式：</p>
+<ul>
+<li>CPU通过执行一段程序，不断查询外设的工作状态</li>
+<li>在确定外设已经准备就绪时，才进行数据传送</li>
+</ul>
+<p>2.中断控制方式</p>
+<ul>
+<li>CPU和外设并行服务</li>
+<li>但外设和存储器之间的数据交换仍由CPU承担</li>
+<li>中断嵌套：CPU响应优先级更高的中断请求</li>
+</ul>
+<p>3.直接存储器访问方式，Direct Memory Access (DMA)：</p>
+<ul>
+<li>数据传送过程不需要CPU干预（不需要执行程序指令）</li>
+<li>由专门硬件控制电路控制，进行外设与存储器间直接数据传送</li>
+<li>该专门硬件控制电路称为 DMA控制器，简称DMAC</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Computer-Architecture/" rel="tag"># Computer Architecture</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/post/b64a7908.html" rel="prev" title="Operating System">
+      <i class="fa fa-chevron-left"></i> Operating System
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/post/5eea14bc.html" rel="next" title="Lanes Detection 道路检测">
+      Lanes Detection 道路检测 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Chapter-1-计算机基本结构"><span class="nav-number">1.</span> <span class="nav-text">Chapter 1 计算机基本结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Chapter-2-指令系统体系结构"><span class="nav-number">2.</span> <span class="nav-text">Chapter 2 指令系统体系结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Chapter-3-算数逻辑单元"><span class="nav-number">3.</span> <span class="nav-text">Chapter 3 算数逻辑单元</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#算术运算指令"><span class="nav-number">3.1.</span> <span class="nav-text">算术运算指令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#逻辑运算指令"><span class="nav-number">3.2.</span> <span class="nav-text">逻辑运算指令</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Chapter-4-乘法器和除法器"><span class="nav-number">4.</span> <span class="nav-text">Chapter 4 乘法器和除法器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Chapter-5-单周期处理器"><span class="nav-number">5.</span> <span class="nav-text">Chapter 5 单周期处理器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Chapter-6-流水线处理器"><span class="nav-number">6.</span> <span class="nav-text">Chapter 6 流水线处理器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Chapter-7-存储层次结构"><span class="nav-number">7.</span> <span class="nav-text">Chapter 7 存储层次结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Chapter-8-中断和异常-（重点）"><span class="nav-number">8.</span> <span class="nav-text">Chapter 8 中断和异常 （重点）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Chapter-9-输入输出设备"><span class="nav-number">9.</span> <span class="nav-text">Chapter 9 输入输出设备</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">s09g</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">s09g</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+<script data-ad-client="ca-pub-4376471142277990" async
+  src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"s09g.xyz","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="如果从单例缓存中没有获取到单例 Bean 对象，则说明两种两种情况：  该 Bean 的 scope 不是 singleton 该 Bean 的 scope 是 singleton ，但是没有初始化完成。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="加载 Bean02-parentBeanFactory 与依赖处理">
+<meta property="og:url" content="http://s09g.xyz/post/4de1272c.html">
+<meta property="og:site_name" content="s09g">
+<meta property="og:description" content="如果从单例缓存中没有获取到单例 Bean 对象，则说明两种两种情况：  该 Bean 的 scope 不是 singleton 该 Bean 的 scope 是 singleton ，但是没有初始化完成。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-01-28T03:59:33.000Z">
+<meta property="article:modified_time" content="2020-05-05T03:29:56.422Z">
+<meta property="article:author" content="s09g">
+<meta property="article:tag" content="Spring">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://s09g.xyz/post/4de1272c.html">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>加载 Bean02-parentBeanFactory 与依赖处理 | s09g</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-166221552-1"></script>
+    <script>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-166221552-1');
+      }
+    </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">s09g</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">10</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">1</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">47</span></a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://s09g.xyz/post/4de1272c.html">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="s09g">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="s09g">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          加载 Bean02-parentBeanFactory 与依赖处理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-01-27 19:59:33" itemprop="dateCreated datePublished" datetime="2020-01-27T19:59:33-08:00">2020-01-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-05-04 20:29:56" itemprop="dateModified" datetime="2020-05-04T20:29:56-07:00">2020-05-04</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">学习笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>如果从单例缓存中没有获取到单例 Bean 对象，则说明两种两种情况：</p>
+<ul>
+<li>该 Bean 的 scope 不是 singleton</li>
+<li>该 Bean 的 scope 是 singleton ，但是没有初始化完成。</li>
+</ul>
+<a id="more"></a>
+
+
+<p>针对这两种情况，Spring 是如何处理的呢？统一加载并完成初始化！这部分内容的篇幅较长，拆分为两部分：</p>
+<ul>
+<li>第一部分，主要是一些检测、parentBeanFactory 以及依赖处理。</li>
+<li>第二部分则是各个 scope 的初始化。</li>
+</ul>
+<p>代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AbstractBeanFactory.java</span></span><br><span class="line"><span class="comment">//protected &lt;T&gt; T doGetBean(final String name, final Class&lt;T&gt; requiredType, final Object[] args, boolean typeCheckOnly)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// ... 省略很多代码</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Fail if we're already creating this bean instance:</span></span><br><span class="line"><span class="comment">// We're assumably within a circular reference.</span></span><br><span class="line"><span class="comment">// &lt;3&gt; 因为 Spring 只解决单例模式下得循环依赖，在原型模式下如果存在循环依赖则会抛出异常。</span></span><br><span class="line"><span class="keyword">if</span> (isPrototypeCurrentlyInCreation(beanName)) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> BeanCurrentlyInCreationException(beanName);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// &lt;4&gt; 如果容器中没有找到，则从父类容器中加载</span></span><br><span class="line"><span class="comment">// Check if bean definition exists in this factory.</span></span><br><span class="line">BeanFactory parentBeanFactory = getParentBeanFactory();</span><br><span class="line"><span class="keyword">if</span> (parentBeanFactory != <span class="keyword">null</span> &amp;&amp; !containsBeanDefinition(beanName)) &#123;</span><br><span class="line">    <span class="comment">// Not found -&gt; check parent.</span></span><br><span class="line">    String nameToLookup = originalBeanName(name);</span><br><span class="line">    <span class="keyword">if</span> (parentBeanFactory <span class="keyword">instanceof</span> AbstractBeanFactory) &#123;</span><br><span class="line">        <span class="keyword">return</span> ((AbstractBeanFactory) parentBeanFactory).doGetBean(</span><br><span class="line">                nameToLookup, requiredType, args, typeCheckOnly);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (args != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="comment">// Delegation to parent with explicit args.</span></span><br><span class="line">        <span class="keyword">return</span> (T) parentBeanFactory.getBean(nameToLookup, args);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (requiredType != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="comment">// No args -&gt; delegate to standard getBean method.</span></span><br><span class="line">        <span class="keyword">return</span> parentBeanFactory.getBean(nameToLookup, requiredType);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> (T) parentBeanFactory.getBean(nameToLookup);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// &lt;5&gt; 如果不是仅仅做类型检查则是创建bean，这里需要记录</span></span><br><span class="line"><span class="keyword">if</span> (!typeCheckOnly) &#123;</span><br><span class="line">    markBeanAsCreated(beanName);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">// &lt;6&gt; 从容器中获取 beanName 相应的 GenericBeanDefinition 对象，并将其转换为 RootBeanDefinition 对象</span></span><br><span class="line">    <span class="keyword">final</span> RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);</span><br><span class="line">    <span class="comment">// 检查给定的合并的 BeanDefinition</span></span><br><span class="line">    checkMergedBeanDefinition(mbd, beanName, args);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Guarantee initialization of beans that the current bean depends on.</span></span><br><span class="line">    <span class="comment">// &lt;7&gt; 处理所依赖的 bean</span></span><br><span class="line">    String[] dependsOn = mbd.getDependsOn();</span><br><span class="line">    <span class="keyword">if</span> (dependsOn != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">for</span> (String dep : dependsOn) &#123;</span><br><span class="line">            <span class="comment">// 若给定的依赖 bean 已经注册为依赖给定的 bean</span></span><br><span class="line">            <span class="comment">// 循环依赖的情况</span></span><br><span class="line">            <span class="keyword">if</span> (isDependent(beanName, dep)) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> BeanCreationException(mbd.getResourceDescription(), beanName,</span><br><span class="line">                        <span class="string">"Circular depends-on relationship between '"</span> + beanName + <span class="string">"' and '"</span> + dep + <span class="string">"'"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// 缓存依赖调用</span></span><br><span class="line">            registerDependentBean(dep, beanName);</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                getBean(dep);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (NoSuchBeanDefinitionException ex) &#123;</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> BeanCreationException(mbd.getResourceDescription(), beanName,</span><br><span class="line">                        <span class="string">"'"</span> + beanName + <span class="string">"' depends on missing bean '"</span> + dep + <span class="string">"'"</span>, ex);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ... 省略很多代码</span></span><br></pre></td></tr></table></figure>
+
+<p>这段代码主要处理如下几个部分：</p>
+<ul>
+<li><code>&lt;3&gt;</code> 处，检测。若当前 Bean 在创建，则抛出 BeanCurrentlyInCreationException 异常。<ul>
+<li>详细解析，见 <a href="#[1-检测]">1. 检测</a> 。</li>
+</ul>
+</li>
+<li><code>&lt;4&gt;</code> 处，如果 beanDefinitionMap 中不存在 beanName 的 BeanDefinition（即在 Spring bean 初始化过程中没有加载），则尝试从 parentBeanFactory 中加载。<ul>
+<li>详细解析，见 <a href="#2-检查父类-BeanFactory">2. 检查父类 BeanFactory</a> 。</li>
+</ul>
+</li>
+<li><code>&lt;5&gt;</code> 处，判断是否为类型检查。<ul>
+<li>详细解析，见 <a href="#3-类型检查">3. 类型检查</a> 。</li>
+</ul>
+</li>
+<li><code>&lt;6&gt;</code> 处，从 <code>mergedBeanDefinitions</code> 中获取 <code>beanName</code> 对应的 RootBeanDefinition 对象。如果这个 BeanDefinition 是子 Bean 的话，则会合并父类的相关属性。<ul>
+<li>详细解析，见 <a href="#4-获取-RootBeanDefinition">4. 获取 RootBeanDefinition</a> 。</li>
+</ul>
+</li>
+<li><code>&lt;7&gt;</code> 处，依赖处理。<ul>
+<li>详细解析，见 <a href="#5-处理依赖">5. 处理依赖</a> 。</li>
+</ul>
+</li>
+</ul>
+<h2 id="1-检测"><a href="#1-检测" class="headerlink" title="1. 检测"></a>1. 检测</h2><p>在前面就提过，Spring 只解决单例模式下的循环依赖，对于原型模式的循环依赖则是抛出 BeanCurrentlyInCreationException 异常，所以首先检查该 <code>beanName</code> 是否处于原型模式下的循环依赖。如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AbstractBeanFactory.java</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (isPrototypeCurrentlyInCreation(beanName)) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> BeanCurrentlyInCreationException(beanName);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>调用 <code>#isPrototypeCurrentlyInCreation(String beanName)</code> 方法，判断当前 Bean 是否正在创建。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AbstractBeanFactory.java</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">boolean</span> <span class="title">isPrototypeCurrentlyInCreation</span><span class="params">(String beanName)</span> </span>&#123;</span><br><span class="line">	Object curVal = <span class="keyword">this</span>.prototypesCurrentlyInCreation.get();</span><br><span class="line">	<span class="keyword">return</span> (curVal != <span class="keyword">null</span> &amp;&amp;</span><br><span class="line">			(curVal.equals(beanName)  <span class="comment">// 相等</span></span><br><span class="line">                    || (curVal <span class="keyword">instanceof</span> Set &amp;&amp; ((Set&lt;?&gt;) curVal).contains(beanName)))); <span class="comment">// 包含</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其实检测逻辑和单例模式一样，一个“集合”存放着正在创建的 Bean ，从该集合中进行判断即可，只不过单例模式的“集合”为 Set ，而原型模式的则是 ThreadLocal 。<code>prototypesCurrentlyInCreation</code> 定义如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AbstractBeanFactory.java</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/** Names of beans that are currently in creation. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ThreadLocal&lt;Object&gt; prototypesCurrentlyInCreation =</span><br><span class="line">		<span class="keyword">new</span> NamedThreadLocal&lt;&gt;(<span class="string">"Prototype beans currently in creation"</span>);</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-检查父类-BeanFactory"><a href="#2-检查父类-BeanFactory" class="headerlink" title="2. 检查父类 BeanFactory"></a>2. 检查父类 BeanFactory</h2><p>若 <code>#containsBeanDefinition(String beanName)</code> 方法中不存在 <code>beanName</code> 相对应的 BeanDefinition 对象时，则从 <code>parentBeanFactory</code> 中获取。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AbstractBeanFactory.java</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 获取 parentBeanFactory</span></span><br><span class="line">BeanFactory parentBeanFactory = getParentBeanFactory();</span><br><span class="line"><span class="comment">// parentBeanFactory 不为空且 beanDefinitionMap 中不存该 name 的 BeanDefinition</span></span><br><span class="line"><span class="keyword">if</span> (parentBeanFactory != <span class="keyword">null</span> &amp;&amp; !containsBeanDefinition(beanName)) &#123;</span><br><span class="line">    <span class="comment">// 确定原始 beanName</span></span><br><span class="line">    String nameToLookup = originalBeanName(name);</span><br><span class="line">    <span class="comment">// 若为 AbstractBeanFactory 类型，委托父类处理</span></span><br><span class="line">    <span class="keyword">if</span> (parentBeanFactory <span class="keyword">instanceof</span> AbstractBeanFactory) &#123;</span><br><span class="line">        <span class="keyword">return</span> ((AbstractBeanFactory) parentBeanFactory).doGetBean(</span><br><span class="line">                nameToLookup, requiredType, args, typeCheckOnly);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (args != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="comment">// 委托给构造函数 getBean() 处理</span></span><br><span class="line">        <span class="keyword">return</span> (T) parentBeanFactory.getBean(nameToLookup, args);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 没有 args，委托给标准的 getBean() 处理</span></span><br><span class="line">        <span class="keyword">return</span> parentBeanFactory.getBean(nameToLookup, requiredType);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>整个过程较为简单，都是委托 <code>parentBeanFactory</code> 的 <code>#getBean(...)</code> 方法来进行处理，只不过在获取之前对 <code>beanName</code> 进行简单的处理，主要是想获取原始的 <code>beanName</code> 。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AbstractBeanFactory.java</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">protected</span> String <span class="title">originalBeanName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">	String beanName = transformedBeanName(name); <span class="comment">// &lt;1&gt;</span></span><br><span class="line">	<span class="keyword">if</span> (name.startsWith(FACTORY_BEAN_PREFIX)) &#123; <span class="comment">// &lt;2&gt;</span></span><br><span class="line">		beanName = FACTORY_BEAN_PREFIX + beanName;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> beanName;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>&lt;1&gt;</code> 处，<code>#transformedBeanName(String name)</code> 方法，是对 <code>name</code> 进行转换，获取真正的 beanName 。在 《开启 Bean 的加载》 中，已经有详细解析。</li>
+<li><code>&lt;2&gt;</code> 处，如果 <code>name</code> 是以 <code>“&amp;”</code> 开头的，则加上 <code>“&amp;”</code> ，因为在 <code>#transformedBeanName(String name)</code> 方法，将 <code>“&amp;”</code> 去掉了，这里补上。</li>
+</ul>
+<h2 id="3-类型检查"><a href="#3-类型检查" class="headerlink" title="3. 类型检查"></a>3. 类型检查</h2><p>方法参数 <code>typeCheckOnly</code> ，是用来判断调用 <code>#getBean(...)</code> 方法时，表示是否为<strong>仅仅</strong>进行类型检查获取 Bean 对象。如果不是仅仅做类型检查，而是创建 Bean 对象，则需要调用 <code>#markBeanAsCreated(String beanName)</code> 方法，进行记录。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AbstractBeanFactory.java</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> *  Names of beans that have already been created at least once.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> *  已创建 Bean 的名字集合</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Set&lt;String&gt; alreadyCreated = Collections.newSetFromMap(<span class="keyword">new</span> ConcurrentHashMap&lt;&gt;(<span class="number">256</span>));</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">markBeanAsCreated</span><span class="params">(String beanName)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 没有创建</span></span><br><span class="line">    <span class="keyword">if</span> (!<span class="keyword">this</span>.alreadyCreated.contains(beanName)) &#123;</span><br><span class="line">        <span class="comment">// 加上全局锁</span></span><br><span class="line">        <span class="keyword">synchronized</span> (<span class="keyword">this</span>.mergedBeanDefinitions) &#123;</span><br><span class="line">            <span class="comment">// 再次检查一次：DCL 双检查模式</span></span><br><span class="line">            <span class="keyword">if</span> (!<span class="keyword">this</span>.alreadyCreated.contains(beanName)) &#123;</span><br><span class="line">                <span class="comment">// Let the bean definition get re-merged now that we're actually creating</span></span><br><span class="line">                <span class="comment">// the bean... just in case some of its metadata changed in the meantime.</span></span><br><span class="line">                <span class="comment">// 从 mergedBeanDefinitions 中删除 beanName，并在下次访问时重新创建它。</span></span><br><span class="line">                clearMergedBeanDefinition(beanName);</span><br><span class="line">                <span class="comment">// 添加到已创建 bean 集合中</span></span><br><span class="line">                <span class="keyword">this</span>.alreadyCreated.add(beanName);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">clearMergedBeanDefinition</span><span class="params">(String beanName)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.mergedBeanDefinitions.remove(beanName);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-获取-RootBeanDefinition"><a href="#4-获取-RootBeanDefinition" class="headerlink" title="4. 获取 RootBeanDefinition"></a>4. 获取 RootBeanDefinition</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AbstractBeanFactory.java</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 从容器中获取 beanName 相应的 GenericBeanDefinition 对象，并将其转换为 RootBeanDefinition 对象</span></span><br><span class="line"><span class="keyword">final</span> RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);</span><br><span class="line"><span class="comment">// 检查给定的合并的 BeanDefinition</span></span><br><span class="line">checkMergedBeanDefinition(mbd, beanName, args);</span><br></pre></td></tr></table></figure>
+
+<p>调用 <code>#getMergedLocalBeanDefinition(String beanName)</code> 方法，获取相对应的 BeanDefinition 对象。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AbstractBeanFactory.java</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/** Map from bean name to merged RootBeanDefinition. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, RootBeanDefinition&gt; mergedBeanDefinitions = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;(<span class="number">256</span>);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">protected</span> RootBeanDefinition <span class="title">getMergedLocalBeanDefinition</span><span class="params">(String beanName)</span> <span class="keyword">throws</span> BeansException </span>&#123;</span><br><span class="line">    <span class="comment">// Quick check on the concurrent map first, with minimal locking.</span></span><br><span class="line">    <span class="comment">// 快速从缓存中获取，如果不为空，则直接返回</span></span><br><span class="line">    RootBeanDefinition mbd = <span class="keyword">this</span>.mergedBeanDefinitions.get(beanName);</span><br><span class="line">    <span class="keyword">if</span> (mbd != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> mbd;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 获取 RootBeanDefinition，</span></span><br><span class="line">    <span class="comment">// 如果返回的 BeanDefinition 是子类 bean 的话，则合并父类相关属性</span></span><br><span class="line">    <span class="keyword">return</span> getMergedBeanDefinition(beanName, getBeanDefinition(beanName));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>首先，直接从 <code>mergedBeanDefinitions</code> 缓存中获取相应的 RootBeanDefinition 对象，如果存在则直接返回。</li>
+<li>否则，调用 <code>#getMergedBeanDefinition(String beanName, BeanDefinition bd)</code> 方法，获取 RootBeanDefinition 对象。若获取的 BeanDefinition 为<strong>子</strong> BeanDefinition，则需要合并<strong>父类</strong>的相关属性。</li>
+<li>调用 <code>#checkMergedBeanDefinition()</code> 方法，检查给定的合并的 BeanDefinition 对象。代码如下：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AbstractBeanFactory.java</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">checkMergedBeanDefinition</span><span class="params">(RootBeanDefinition mbd, String beanName, @Nullable Object[] args)</span></span></span><br><span class="line"><span class="function">		<span class="keyword">throws</span> BeanDefinitionStoreException </span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (mbd.isAbstract()) &#123;</span><br><span class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> BeanIsAbstractException(beanName);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="5-处理依赖"><a href="#5-处理依赖" class="headerlink" title="5. 处理依赖"></a>5. 处理依赖</h2><p>如果一个 Bean 有依赖 Bean 的话，那么在初始化该 Bean 时是需要先初始化它所依赖的 Bean 。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// AbstractBeanFactory.java</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Guarantee initialization of beans that the current bean depends on.</span></span><br><span class="line"><span class="comment">// 处理所依赖的 bean</span></span><br><span class="line">String[] dependsOn = mbd.getDependsOn();</span><br><span class="line"><span class="keyword">if</span> (dependsOn != <span class="keyword">null</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (String dep : dependsOn) &#123;</span><br><span class="line">        <span class="comment">// &lt;1&gt; 若给定的依赖 bean 已经注册为依赖给定的 bean</span></span><br><span class="line">        <span class="comment">// 即循环依赖的情况，抛出 BeanCreationException 异常</span></span><br><span class="line">        <span class="keyword">if</span> (isDependent(beanName, dep)) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> BeanCreationException(mbd.getResourceDescription(), beanName,</span><br><span class="line">                    <span class="string">"Circular depends-on relationship between '"</span> + beanName + <span class="string">"' and '"</span> + dep + <span class="string">"'"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// &lt;2&gt; 缓存依赖调用 </span></span><br><span class="line">        registerDependentBean(dep, beanName);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// &lt;3&gt; 递归处理依赖 Bean</span></span><br><span class="line">            getBean(dep);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (NoSuchBeanDefinitionException ex) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> BeanCreationException(mbd.getResourceDescription(), beanName,</span><br><span class="line">                    <span class="string">"'"</span> + beanName + <span class="string">"' depends on missing bean '"</span> + dep + <span class="string">"'"</span>, ex);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>这段代码逻辑是：通过迭代的方式依次对依赖 bean 进行检测、校验。如果通过，则调用 <code>#getBean(String beanName)</code> 方法，实例化<strong>依赖</strong>的 Bean 对象。</li>
+</ul>
+<h3 id="5-1-isDependent"><a href="#5-1-isDependent" class="headerlink" title="5.1 isDependent"></a>5.1 isDependent</h3><p><code>&lt;1&gt;</code> 处，调用 <code>#isDependent(String beanName, String dependentBeanName)</code> 方法，是校验该依赖是否已经注册给当前 Bean 。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// DefaultSingletonBeanRegistry.java</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Map between dependent bean names: bean name to Set of dependent bean names.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * 保存的是依赖 beanName 之间的映射关系：beanName - &gt; 依赖 beanName 的集合</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, Set&lt;String&gt;&gt; dependentBeanMap = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;(<span class="number">64</span>);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">boolean</span> <span class="title">isDependent</span><span class="params">(String beanName, String dependentBeanName)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">synchronized</span> (<span class="keyword">this</span>.dependentBeanMap) &#123;</span><br><span class="line">		<span class="keyword">return</span> isDependent(beanName, dependentBeanName, <span class="keyword">null</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>dependentBeanMap</code> 对象保存的是依赖 <code>beanName</code> 之间的映射关系：<code>beanName</code> - &gt; 依赖 beanName 的集合。</li>
+<li>同步加锁给 <code>dependentBeanMap</code> 对象，然后调用 <code>#isDependent(String beanName, String dependentBeanName, Set&lt;String&gt; alreadySeen)</code> 方法，进行校验。代码如下：</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// DefaultSingletonBeanRegistry.java</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">isDependent</span><span class="params">(String beanName, String dependentBeanName, @Nullable Set&lt;String&gt; alreadySeen)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// alreadySeen 已经检测的依赖 bean</span></span><br><span class="line">    <span class="keyword">if</span> (alreadySeen != <span class="keyword">null</span> &amp;&amp; alreadySeen.contains(beanName)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 获取原始 beanName</span></span><br><span class="line">    String canonicalName = canonicalName(beanName);</span><br><span class="line">    <span class="comment">// 获取当前 beanName 的依赖集合</span></span><br><span class="line">    Set&lt;String&gt; dependentBeans = <span class="keyword">this</span>.dependentBeanMap.get(canonicalName);</span><br><span class="line">    <span class="keyword">if</span> (dependentBeans == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 存在，则证明存在已经注册的依赖</span></span><br><span class="line">    <span class="keyword">if</span> (dependentBeans.contains(dependentBeanName)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 递归检测依赖</span></span><br><span class="line">    <span class="keyword">for</span> (String transitiveDependency : dependentBeans) &#123;</span><br><span class="line">        <span class="keyword">if</span> (alreadySeen == <span class="keyword">null</span>) &#123;</span><br><span class="line">            alreadySeen = <span class="keyword">new</span> HashSet&lt;&gt;();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 添加到 alreadySeen 中</span></span><br><span class="line">        alreadySeen.add(beanName);</span><br><span class="line">        <span class="comment">// 递推</span></span><br><span class="line">        <span class="keyword">if</span> (isDependent(transitiveDependency, dependentBeanName, alreadySeen)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-2-registerDependentBean"><a href="#5-2-registerDependentBean" class="headerlink" title="5.2 registerDependentBean"></a>5.2 registerDependentBean</h3><p><code>&lt;2&gt;</code> 处，如果校验成功，则调用 <code>#registerDependentBean(String beanName, String dependentBeanName)</code> 方法，将该依赖进行注册，便于在销毁 Bean 之前对其进行销毁。代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// DefaultSingletonBeanRegistry.java</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Map between dependent bean names: bean name to Set of dependent bean names.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * 保存的是依赖 beanName 之间的映射关系：beanName - &gt; 依赖 beanName 的集合</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, Set&lt;String&gt;&gt; dependentBeanMap = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;(<span class="number">64</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Map between depending bean names: bean name to Set of bean names for the bean's dependencies.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * 保存的是依赖 beanName 之间的映射关系：依赖 beanName - &gt; beanName 的集合</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, Set&lt;String&gt;&gt; dependenciesForBeanMap = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;(<span class="number">64</span>);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">registerDependentBean</span><span class="params">(String beanName, String dependentBeanName)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 获取 beanName</span></span><br><span class="line">    String canonicalName = canonicalName(beanName);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 添加 &lt;canonicalName, &lt;dependentBeanName&gt;&gt; 到 dependentBeanMap 中</span></span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>.dependentBeanMap) &#123;</span><br><span class="line">        Set&lt;String&gt; dependentBeans =</span><br><span class="line">                <span class="keyword">this</span>.dependentBeanMap.computeIfAbsent(canonicalName, k -&gt; <span class="keyword">new</span> LinkedHashSet&lt;&gt;(<span class="number">8</span>));</span><br><span class="line">        <span class="keyword">if</span> (!dependentBeans.add(dependentBeanName)) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 添加 &lt;dependentBeanName, &lt;canonicalName&gt;&gt; 到 dependenciesForBeanMap 中</span></span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>.dependenciesForBeanMap) &#123;</span><br><span class="line">        Set&lt;String&gt; dependenciesForBean =</span><br><span class="line">                <span class="keyword">this</span>.dependenciesForBeanMap.computeIfAbsent(dependentBeanName, k -&gt; <span class="keyword">new</span> LinkedHashSet&lt;&gt;(<span class="number">8</span>));</span><br><span class="line">        dependenciesForBean.add(canonicalName);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其实将就是该映射关系保存到两个集合中：<code>dependentBeanMap</code>、<code>dependenciesForBeanMap</code> 。</p>
+<h3 id="5-3-getBean"><a href="#5-3-getBean" class="headerlink" title="5.3 getBean"></a>5.3 getBean</h3><p><code>&lt;3&gt;</code> 处，最后调用 <code>#getBean(String beanName)</code> 方法，实例化依赖 Bean 对象。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Spring/" rel="tag"># Spring</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/post/7e009c92.html" rel="prev" title="加载Bean01-从单例缓存中获取单例Bean">
+      <i class="fa fa-chevron-left"></i> 加载Bean01-从单例缓存中获取单例Bean
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/post/2c4d25e.html" rel="next" title="加载Bean03-分析各scope的Bean创建">
+      加载Bean03-分析各scope的Bean创建 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-检测"><span class="nav-number">1.</span> <span class="nav-text">1. 检测</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-检查父类-BeanFactory"><span class="nav-number">2.</span> <span class="nav-text">2. 检查父类 BeanFactory</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-类型检查"><span class="nav-number">3.</span> <span class="nav-text">3. 类型检查</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-获取-RootBeanDefinition"><span class="nav-number">4.</span> <span class="nav-text">4. 获取 RootBeanDefinition</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-处理依赖"><span class="nav-number">5.</span> <span class="nav-text">5. 处理依赖</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-isDependent"><span class="nav-number">5.1.</span> <span class="nav-text">5.1 isDependent</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-registerDependentBean"><span class="nav-number">5.2.</span> <span class="nav-text">5.2 registerDependentBean</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-getBean"><span class="nav-number">5.3.</span> <span class="nav-text">5.3 getBean</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">s09g</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">47</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">s09g</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
